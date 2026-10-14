@@ -37,6 +37,7 @@ class CompassPostgresIT {
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V7__compass_preparation_plans.sql")).execute(ds);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V8__compass_review_skill_override.sql")).execute(ds);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V9__compass_confirmed_review.sql")).execute(ds);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V11__analysis_metrics.sql")).execute(ds);
         json=new CompassJson(new ObjectMapper().findAndRegisterModules()); snapshots=new SnapshotService(db,json,manager);
     }
     @AfterAll static void cleanup() {
@@ -78,6 +79,19 @@ class CompassPostgresIT {
             var a=new Evidence.Assessment(q.id(),"UNCERTAIN",List.of(),"需要复核真实项目细节","CLARIFY","核实缓存更新策略","记录项目实际策略与验证结果",30);
             return new EvidenceModel.Result(new Evidence.Report(List.of(q),List.of(a)),2);
         };
+    }
+    @Test void telemetryPersistsForSuccessAndFailureAndLegacyRunsHaveNoFakeMetrics() throws Exception {
+        var v=snapshots.createText("统计测试","项目使用 Redis");var j=snapshots.createJob("Java","统计虚构公司","需要缓存一致性",null,null,null);
+        var metrics=new AnalysisMetrics("FULL");var a=metrics.begin("EXTRACT",1);a.finish(1,null);var b=metrics.begin("ASSESS",1);b.finish(1,null);
+        var service=service((id,version,job,h)->new EvidenceModel.Result(model().analyze(id,version,job,h).report(),2,metrics.snapshot()));
+        try { var run=await(service,service.submit(v.id(),j.id(),null).id());assertThat(run.status()).isEqualTo("SUCCEEDED");
+            assertThat(service.get(run.id()).metrics().attempts()).hasSize(2);assertThat(run.metrics().usageComplete()).isFalse(); }
+        finally { service.close(); }
+        var failedMetrics=new AnalysisMetrics("FULL");var failed=failedMetrics.begin("EXTRACT",1);failed.finish(1,"MODEL_FAILED");
+        var failing=service((id,version,job,h)->{throw new CompassException(502,"MODEL_FAILED","测试失败").withMetrics(failedMetrics.snapshot());});
+        try { var run=await(failing,failing.submit(v.id(),j.id(),null).id());assertThat(run.status()).isEqualTo("FAILED");assertThat(run.metrics().modelFailures()).isEqualTo(1);assertThat(run.toolCalls()).isEqualTo(1); }
+        finally { failing.close(); }
+        var legacy=service(model());try { assertThat(await(legacy,legacy.submit(v.id(),j.id(),null).id()).metrics()).isNull(); } finally { legacy.close(); }
     }
     @Test void modelFailureAndUserReviewNeverRewriteEvidence() throws Exception {
         var v=snapshots.createText("证据测试","项目使用 Redis"); var j=snapshots.createJob("Java","证据公司","需要缓存一致性",null,null,null);

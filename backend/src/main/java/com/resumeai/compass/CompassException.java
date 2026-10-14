@@ -3,6 +3,9 @@ package com.resumeai.compass;
 public class CompassException extends RuntimeException {
     public final int status;
     public final String code;
+    private AnalysisMetrics.Snapshot metrics;
+    public AnalysisMetrics.Snapshot metrics() { return metrics; }
+    public CompassException withMetrics(AnalysisMetrics.Snapshot value) { metrics=value;return this; }
     public CompassException(int status, String code, String message) {
         super(message); this.status = status; this.code = code;
     }

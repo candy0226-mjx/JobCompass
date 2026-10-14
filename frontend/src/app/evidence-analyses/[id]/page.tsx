@@ -12,6 +12,12 @@ export default function EvidencePage({ params }: { params: Promise<{ id: string 
     <Link href="/compass" className="font-bold text-blue-700 underline">返回求职罗盘</Link>
     {error && <p role="alert" className="bg-red-50 p-4 text-red-800">{error}</p>}
     {run && <p>{run.job.company} · {statusLabel[run.status]} · 工具读取 {run.toolCalls} 次 · {run.durationMs === null ? "等待结果" : `${(run.durationMs / 1000).toFixed(1)} 秒`}</p>}
+    {run?.metrics && <Card><h2 className="text-lg font-semibold">本次调用统计</h2>
+      <p className="mt-2 text-sm">阶段尝试 {run.metrics.attempts.length} 次 · 重试 {run.metrics.retryCount} 次 · 校验失败 {run.metrics.validationFailures} 次 · 模型/格式失败 {run.metrics.modelFailures} 次</p>
+      <p className="mt-2 text-sm">{run.metrics.usageComplete ? `输入 ${run.metrics.inputTokens} / 输出 ${run.metrics.outputTokens} Token` : `Token 未完整返回；已报告输入 ${run.metrics.reportedInputTokens} / 输出 ${run.metrics.reportedOutputTokens}，不代表总消耗`}</p>
+      <p className="mt-2 text-xs text-slate-500">包含两个分析阶段及重试，工具循环按供应商累计用量统计。阶段尝试数不是 HTTP 请求数；Token 不是实际账单。快照模式：{run.metrics.snapshotMode}。</p>
+      <details className="mt-3 text-sm"><summary>查看阶段明细</summary>{run.metrics.attempts.map((a,i)=><p key={i} className="mt-2">{a.stage === "EXTRACT" ? "提取要求" : "核对证据"} · 第 {a.number} 次 · {a.durationMs} ms · 工具 {a.toolCalls} 次 · {a.failureCode || "成功"} · 输入 {a.inputTokens ?? "未返回"} / 输出 {a.outputTokens ?? "未返回"}</p>)}</details>
+    </Card>}
     {run?.status === "FAILED" && <Card><p>失败类别：{run.errorCode}。本次没有有效报告。</p><button disabled={busy} className="mt-3 border border-black p-3" onClick={async () => { setBusy(true); try { const next = await compass<Run>(`/evidence-analyses/${id}/retry`, "POST"); window.location.href = `/evidence-analyses/${next.id}`; } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }}>创建新运行重试</button></Card>}
     {run?.report?.requirements.map(q => { const a = run.report!.assessments.find(x => x.requirementId === q.id)!; const review = run.reviews.find(x => x.requirementId === q.id); const edit = edits[q.id] || { category: review?.category || (a.status === "MATCH" ? "CONFIRMED_MATCH" : a.actionType === "LEARN" ? "LEARN" : "CLARIFY"), note: review?.note || "", skillKey: review?.skillKey || "" }; return <Card tone="paper" key={q.id}>
       <h2 className="text-xl font-bold">{statusLabel[q.kind]} · {q.text}</h2><p className="my-3 font-bold">{statusLabel[a.status]}：{a.reason}</p>

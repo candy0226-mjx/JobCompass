@@ -46,7 +46,7 @@ mvn -f backend/pom.xml '-Dtest=ExperiencePostgresIT' test
 
 该测试通过 `COMPASS_TEST_DB_URL`、`COMPASS_TEST_DB_USER`、`COMPASS_TEST_DB_PASSWORD` 读取测试连接，未设置时使用本地开发默认值。它不自动读取根 `.env` 的数据库凭据；使用独立随机 schema，正常结束会清理，账号需要 schema 创建权限。
 
-真实模型评估会消耗额度并覆盖结果 JSON；它会启动临时 Spring 应用并连接已配置数据库，触发启动时的中断恢复检查。先停止正在运行的后端并确认没有待完成分析，再运行，避免影响已有任务。需要评估模型/提示词时才显式执行，工作目录必须为 `backend`：
+真实模型评估会消耗额度；它会启动临时 Spring 应用并连接已配置数据库，执行迁移并触发启动时的中断恢复检查。先停止正在运行的后端并确认没有待完成分析，再运行，避免影响已有任务。需要评估模型/工具快照时才显式执行，工作目录必须为 `backend`：
 
 ```powershell
 Push-Location backend
@@ -56,6 +56,10 @@ try {
     Pop-Location
 }
 ```
+
+当前评估使用 `samples/jobcompass-evaluation.json` 中 40 个虚构单要求样例（25 个开发、15 个独立验收），逐组交替执行 FULL/COMPACT，共 80 次分析任务。每完成一次就保存结果到 `docs/jobcompass-evaluation-comparison.json`，会覆盖该比较文件；历史 15 条结果文件保持不变。仅需试跑时执行 `mvn '-Dtest=CompassLiveModelIT' '-Dcompass.eval.limit=1' '-Dcompass.eval.output=target/evaluation-smoke.json' test`。少量试跑不能作为启用精简模式的依据。
+
+查看 `completed`、全部原始行、开发/验收集各自汇总以及 `compactEligible`。JUnit 通过表示评估执行/统计正常，不表示模型质量通过；失败任务保留在成功率和标签一致率分母中。Token 使用 ChatClient 返回的工具循环累计用量，再合计两个阶段及重试；缺失返回值不当作零，阶段尝试数不是 HTTP 请求数，Token 数不是账单。P50/P95 使用最近秩（nearest-rank）算法。当前每组仅一次对照，不是通用准确率或并发压测。
 
 文档修改只检查内容、链接、格式与命令来源，不要求重跑整个业务链路。现有 `npm run lint` 使用旧 `next lint` 命令，尚未配置适合当前 Next.js 的 lint 流程，不能将其列为已通过的检查。
 

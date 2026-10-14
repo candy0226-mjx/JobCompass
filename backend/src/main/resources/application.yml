@@ -1,6 +1,10 @@
 server:
   port: 8080
 
+jobcompass:
+  evidence:
+    snapshot-mode: ${JOBCOMPASS_EVIDENCE_SNAPSHOT_MODE:COMPACT}
+
 spring:
   application:
     name: resume-ai-backend

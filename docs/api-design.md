@@ -1,6 +1,6 @@
 # JobCompass 接口说明
 
-最后核对：2026-10-13。以控制器、请求 record 和前端类型为准；字段变化时修改本文件。
+最后核对：2026-10-14。以控制器、请求 record 和前端类型为准；字段变化时修改本文件。
 
 ## 1. 访问约定
 
@@ -33,7 +33,11 @@
 | POST | `/evidence-analyses/{id}/retry` | 仅失败运行可重试，保留原资料，新建运行 |
 | PUT | `/evidence-analyses/{id}/reviews` | 批量保存本报告的复核意见 |
 
-运行对象包含 `id, status, resumeVersionId, job, report, reviews, errorCode, durationMs, toolCalls, createdAt`。状态为 `PENDING / RUNNING / SUCCEEDED / FAILED`；只有成功时使用报告，不将 202 响应当完成结果。后台失败通过运行状态/错误码查看。
+运行对象包含 `id, status, resumeVersionId, job, report, reviews, errorCode, durationMs, toolCalls, createdAt, metrics`。状态为 `PENDING / RUNNING / SUCCEEDED / FAILED`；只有成功时使用报告，不将 202 响应当完成结果。后台失败通过运行状态/错误码查看。
+
+`metrics` 可空：历史数据、排队中或在模型调用前失败时没有统计。新模型调用成功及失败均保存已获取的数值。字段为 `snapshotMode, attempts, retryCount, toolCalls, validationFailures, modelFailures, inputTokens, outputTokens, reportedInputTokens, reportedOutputTokens, usageComplete, durationMs`。每项 attempt 包含 `stage`（EXTRACT/ASSESS）、`number`（该阶段第几次）、`durationMs, toolCalls, failureCode, inputTokens, outputTokens`。
+
+尝试数不是 HTTP 调用数；Token 按工具循环累计响应用量，再合计阶段与重试。若任一尝试的用量未返回，`usageComplete=false`，总 `inputTokens/outputTokens=null`，`reported*` 只表示已获取的部分。`metrics.durationMs` 是模型分析范围，外层 `durationMs` 包含服务处理，两者无需完全相等。统计不保存正文/Key，不等于费用明细，也不包含其他模块调用。
 
 `report.requirements` 包含要求 ID、文本、`REQUIRED/PREFERRED`、技能键和岗位引用；`report.assessments` 包含 `requirementId, status, resumeEvidence, reason, actionType, taskTitle, expectedOutput, effortMinutes`。
 

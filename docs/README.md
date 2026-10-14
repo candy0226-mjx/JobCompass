@@ -17,6 +17,7 @@
 | 查看已完成与后续方向 | [路线图](roadmap.md) |
 | 启动报错、模型失败或版本冲突 | [故障排查](故障排查.md) |
 | 复现验收、核实测试数字 | [验收记录](验收记录.md) |
+| 比较工具快照的质量、Token 与延迟 | [40 组对照结果](jobcompass-evaluation-comparison.json)、[复现命令](../CONTRIBUTING.md)；历史 [15 条结果](jobcompass-evaluation-results.json) 保留 |
 | 学习项目、准备面试追问 | [面试问答](面试问答.md) |
 | 和他人或 AI 协作开发 | [贡献指南](../CONTRIBUTING.md)、[AI 协作说明](../AGENTS.md) |
 

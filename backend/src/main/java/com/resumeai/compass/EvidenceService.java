@@ -18,7 +18,12 @@ public class EvidenceService {
     private final ThreadPoolExecutor workers=new ThreadPoolExecutor(2,2,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(8),
         r->{var t=new Thread(r,"compass-evidence");t.setDaemon(true);return t;},new ThreadPoolExecutor.AbortPolicy());
     public record Run(UUID id,String status,UUID resumeVersionId,Snapshots.Job job,Evidence.Report report,
-                      List<Evidence.SavedReview> reviews,String errorCode,Long durationMs,int toolCalls,OffsetDateTime createdAt) {}
+                      List<Evidence.SavedReview> reviews,String errorCode,Long durationMs,int toolCalls,OffsetDateTime createdAt,AnalysisMetrics.Snapshot metrics) {
+        public Run(UUID id,String status,UUID versionId,Snapshots.Job job,Evidence.Report report,List<Evidence.SavedReview> reviews,
+                   String errorCode,Long durationMs,int toolCalls,OffsetDateTime createdAt) {
+            this(id,status,versionId,job,report,reviews,errorCode,durationMs,toolCalls,createdAt,null);
+        }
+    }
     public EvidenceService(JdbcTemplate db,CompassJson json,SnapshotService snapshots,EvidenceModel model,PlatformTransactionManager manager,Environment env) {
         this.db=db;this.json=json;this.snapshots=snapshots;this.model=model;this.tx=new TransactionTemplate(manager);
         this.modelName=env.getProperty("spring.ai.openai.chat.options.model","configured-model");
@@ -58,18 +63,23 @@ public class EvidenceService {
                     db.update("INSERT INTO analysis_requirement(id,analysis_id,requirement_json,assessment_json) VALUES (?,?,CAST(? AS jsonb),CAST(? AS jsonb))",
                         requirement.id(),id,json.write(requirement),json.write(assessment));
                 }
-                db.update("UPDATE analysis_run SET status='SUCCEEDED',report_json=CAST(? AS jsonb),duration_ms=?,tool_calls=?,finished_at=now() WHERE id=?",
-                    json.write(result.report()),elapsed(start),result.toolCalls(),id);
+                db.update("UPDATE analysis_run SET status='SUCCEEDED',report_json=CAST(? AS jsonb),duration_ms=?,tool_calls=?,metrics_json=CAST(? AS jsonb),finished_at=now() WHERE id=?",
+                    json.write(result.report()),elapsed(start),result.toolCalls(),result.metrics()==null?null:json.write(result.metrics()),id);
             });
-        } catch(CompassException e) { fail(id,e.code,elapsed(start)); }
+        } catch(CompassException e) { fail(id,e.code,elapsed(start),e.metrics()); }
         catch(Exception e) { fail(id,"ANALYSIS_FAILED",elapsed(start)); }
     }
     private long elapsed(long start) { return TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-start); }
-    private void fail(UUID id,String code,long duration) { db.update("UPDATE analysis_run SET status='FAILED',error_code=?,duration_ms=?,finished_at=now() WHERE id=?",code,duration,id); }
+    private void fail(UUID id,String code,long duration) { fail(id,code,duration,null); }
+    private void fail(UUID id,String code,long duration,AnalysisMetrics.Snapshot metrics) {
+        db.update("UPDATE analysis_run SET status='FAILED',error_code=?,duration_ms=?,metrics_json=CAST(? AS jsonb),tool_calls=?,finished_at=now() WHERE id=?",
+            code,duration,metrics==null?null:json.write(metrics),metrics==null?0:metrics.toolCalls(),id);
+    }
     public Run get(UUID id) {
         var runs=db.query("SELECT * FROM analysis_run WHERE id=?",(r,n)->new Run(id,r.getString("status"),r.getObject("resume_version_id",UUID.class),
             json.read(r.getString("job_snapshot_json"),Snapshots.Job.class),r.getString("report_json")==null?null:json.read(r.getString("report_json"),Evidence.Report.class),
-            reviews(id),r.getString("error_code"),r.getObject("duration_ms",Long.class),r.getInt("tool_calls"),r.getObject("created_at",OffsetDateTime.class)),id);
+            reviews(id),r.getString("error_code"),r.getObject("duration_ms",Long.class),r.getInt("tool_calls"),r.getObject("created_at",OffsetDateTime.class),
+            r.getString("metrics_json")==null?null:json.read(r.getString("metrics_json"),AnalysisMetrics.Snapshot.class)),id);
         if(runs.isEmpty()) throw CompassException.missing("分析不存在");return runs.getFirst();
     }
     public List<Run> list() { return db.query("SELECT id FROM analysis_run ORDER BY created_at DESC LIMIT 100",(r,n)->r.getObject(1,UUID.class)).stream().map(this::get).toList(); }

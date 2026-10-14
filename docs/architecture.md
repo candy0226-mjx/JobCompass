@@ -30,7 +30,7 @@ flowchart TD
 |---|---|
 | `backend/src/main/java/com/resumeai/compass` | 新输入、证据分析、复核、预算与计划跟踪 |
 | 原 `interfaces / application / domain / infrastructure / agent` | 上游接口、实体、知识库、改写、文件与模型设施 |
-| `backend/src/main/resources/db/migration` | Flyway；V1–V4 保留，V5–V9 为原三项改造，V10 新增追问与证据卡 |
+| `backend/src/main/resources/db/migration` | Flyway；V1–V4 保留，V5–V9 为原三项改造，V10 新增追问与证据卡，V11 添加分析统计 JSONB |
 | `frontend/src/app/compass` | 输入、分析选择、预算和计划列表 |
 | `frontend/src/app/evidence-analyses/[id]` | 状态查询、证据报告、复核与失败重试 |
 | `backend/src/main/java/com/resumeai/compass/experience` | 针对要求追问、回答保存、证据卡与历史确认 |
@@ -52,6 +52,10 @@ flowchart TD
 `SpringAiEvidenceModel` 先提取 1–20 条 JD 要求，再逐条核对简历。每阶段最多两次尝试，每次创建独立的 `JobCompassReadTools`，只能读当前 ID 范围且最多四次访问。工具没有写数据库或投递能力。
 
 `EvidenceValidator` 检查字段、状态、要求 ID、段落 ID 和逐字引用。缺少经历记录默认不确定；明确缺口规则偏保守，引用校验不保证理解完全正确。人工复核独立保存，原模型判断保留。提示词与校验配合约束正文指令，但不是完整安全认证体系。
+
+`AnalysisMetrics` 每次分析单独创建，通过 CallAdvisor 在结构转换前取得 ChatClient 工具循环累计用量；在每阶段的 finally 中记录耗时、工具读取和失败代码，成功/失败快照分别随运行结果保存到 V11 的 `analysis_run.metrics_json`。没有增加模型请求或数据库表；不记录提示词、工具正文、模型正文或凭据。用量不完整时保留部分统计、总量置空；历史记录仍为空。若网络中断前服务商已产生用量但没有返回，客户端无法准确统计账单。
+
+FULL 工具快照保持原结构；COMPACT 仅移除重复正文、哈希、时间等分析不需要的元数据，保留 ID 与全部原文分段。两种模式共用原提示词、范围校验、工具次数上限和证据校验。模型模式可以用 `jobcompass.evidence.snapshot-mode` 调整；启用决定由独立验收集对照结果记录，不能因 Token 变少就认定质量合格。统计仅覆盖新证据分析，未给原改写和追问增加统计。
 
 ## 4. 经历追问与证据卡
 
