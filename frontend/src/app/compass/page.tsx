@@ -7,8 +7,8 @@ import { compass, Plan, Run, Version, statusLabel } from "@/lib/api/compass";
 
 type ResumeItem = { id: string; title: string };
 type JobItem = { id: string; title: string; company: string };
-const field = "w-full border border-black bg-white p-3 text-sm";
-const button = "border border-black bg-[#1d4ed8] px-4 py-3 text-sm font-bold text-white disabled:opacity-40";
+const field = "mt-2 w-full rounded-lg border border-[var(--border)] bg-white p-3 text-sm";
+const button = "rounded-lg border border-[var(--primary)] bg-[var(--primary)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-50";
 export default function CompassPage() {
   const [resumes, setResumes] = useState<ResumeItem[]>([]), [jobs, setJobs] = useState<JobItem[]>([]);
   const [resumeId, setResumeId] = useState(""), [versions, setVersions] = useState<Version[]>([]), [versionId, setVersionId] = useState("");
@@ -36,18 +36,21 @@ export default function CompassPage() {
   const current = versions.find(v => v.id === versionId);
   return <AppShell title="求职罗盘" eyebrow="证据分析与准备计划" description="选择一版简历与最多三个岗位，核对真实经历，再安排有限的准备时间。真实简历正文会发送到你配置的模型服务。">
     {error && <p role="alert" className="border border-red-700 bg-red-50 p-4 text-red-800">{error}</p>}
+    <ol aria-label="求职准备流程" className="grid grid-cols-2 gap-4 rounded-xl border border-[var(--border)] bg-white p-4 sm:grid-cols-4">
+      {["简历版本", "目标岗位", "证据复核", "准备计划"].map((step, index) => <li key={step} className="jc-step-label"><span className="jc-step-number">{index + 1}</span>{step}</li>)}
+    </ol>
     <section className="grid gap-6 lg:grid-cols-2">
-      <Card tone="paper"><h2 className="mb-4 text-2xl font-bold">1. 固定简历版本</h2>
+      <Card tone="paper"><h2 className="mb-2 flex items-center gap-3 text-xl font-semibold"><span className="jc-step-number" aria-hidden="true">1</span>固定简历版本</h2><p className="mb-5 text-sm text-[var(--steel-grey)]">选择已有简历，或创建一份新的简历。</p>
         <label className="block">已有简历<select className={field} value={resumeId} onChange={e => setResumeId(e.target.value)}><option value="">请选择</option>{resumes.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}</select></label>
         {versions.length > 0 && <label className="mt-3 block">分析版本<select className={field} value={versionId} onChange={e => setVersionId(e.target.value)}>{versions.map(v => <option value={v.id} key={v.id}>版本 {v.versionNo} · {v.hash.slice(0, 8)}</option>)}</select></label>}
         {current && <details className="my-3"><summary>查看固定正文与分段</summary>{current.segments.map(s => <p key={s.id} className="mt-2 whitespace-pre-wrap text-sm">[{s.id}] {s.text}</p>)}</details>}
-        <hr className="my-4"/><input aria-label="简历名称" placeholder="新简历名称" className={field} value={title} onChange={e => setTitle(e.target.value)}/>
-        <textarea aria-label="简历正文" placeholder="粘贴正文；或为已选简历保存新版本" className={`${field} mt-3 h-40`} value={text} onChange={e => setText(e.target.value)} maxLength={20000}/>
-        <div className="mt-3 flex gap-2"><button className={button} disabled={busy || !title.trim() || !text.trim()} onClick={() => action(async () => { const v = await compass<Version>("/resumes/text", "POST", { title, text }); await refresh(); setResumeId(v.resumeId); })}>创建文本简历</button>
+        <div className="my-5 flex items-center gap-4 text-xs text-[var(--steel-grey)]"><hr className="flex-1"/>或创建新简历<hr className="flex-1"/></div><label className="block text-sm" htmlFor="resume-title">简历名称</label><input id="resume-title" aria-label="简历名称" placeholder="新简历名称" className={field} value={title} onChange={e => setTitle(e.target.value)}/>
+        <label className="mt-4 block text-sm" htmlFor="resume-body">简历正文</label><textarea id="resume-body" aria-label="简历正文" placeholder="粘贴正文；或为已选简历保存新版本" className={`${field} h-40`} value={text} onChange={e => setText(e.target.value)} maxLength={20000}/>
+        <div className="mt-3 flex flex-wrap gap-2"><button className={button} disabled={busy || !title.trim() || !text.trim()} onClick={() => action(async () => { const v = await compass<Version>("/resumes/text", "POST", { title, text }); await refresh(); setResumeId(v.resumeId); })}>创建文本简历</button>
           <button className={button} disabled={busy || !resumeId || !text.trim()} onClick={() => action(async () => { const v = await compass<Version>(`/resumes/${resumeId}/versions`, "POST", { text }); setVersions([v, ...versions]); setVersionId(v.id); })}>保存为新版本</button></div>
-        <label className="mt-4 block text-sm">上传 PDF（名称必填、≤5MB、≤10页）<input aria-label="上传PDF" className={`${field} mt-2`} type="file" accept=".pdf" disabled={busy || !title.trim()} onChange={e => { const file = e.target.files?.[0]; if (file) action(async () => { const form = new FormData(); form.append("file", file); form.append("title", title); const v = await compass<Version>("/compass/resumes/upload", "POST", form); await refresh(); setResumeId(v.resumeId); }); }}/></label>
+        <label className="mt-5 block rounded-lg border border-dashed border-[var(--border)] bg-slate-50/50 p-4 text-sm">上传 PDF<span className="mt-1 block text-xs text-[var(--steel-grey)]">名称必填 · 最大 5MB · 最多 10 页</span><input aria-label="上传PDF" className={`${field} mt-3`} type="file" accept=".pdf" disabled={busy || !title.trim()} onChange={e => { const file = e.target.files?.[0]; if (file) action(async () => { const form = new FormData(); form.append("file", file); form.append("title", title); const v = await compass<Version>("/compass/resumes/upload", "POST", form); await refresh(); setResumeId(v.resumeId); }); }}/></label>
       </Card>
-      <Card tone="paper"><h2 className="mb-4 text-2xl font-bold">2. 选择目标岗位（最多三个）</h2>
+      <Card tone="paper"><h2 className="mb-2 flex items-center gap-3 text-xl font-semibold"><span className="jc-step-number" aria-hidden="true">2</span>选择目标岗位</h2><p className="mb-5 text-sm text-[var(--steel-grey)]">最多选择三个岗位 · 已选择 {selectedJobs.length} / 3</p>
         <div className="max-h-56 space-y-2 overflow-auto">{jobs.map(j => <label className="flex gap-2 border border-black p-3" key={j.id}><input type="checkbox" checked={selectedJobs.includes(j.id)} disabled={!selectedJobs.includes(j.id) && selectedJobs.length >= 3} onChange={e => setSelectedJobs(e.target.checked ? [...selectedJobs, j.id] : selectedJobs.filter(id => id !== j.id))}/>{j.company} · {j.title}</label>)}</div>
         <div className="mt-4 grid grid-cols-2 gap-2"><input aria-label="公司" placeholder="公司" className={field} value={company} onChange={e => setCompany(e.target.value)}/><input aria-label="岗位名称" placeholder="岗位名称" className={field} value={jobTitle} onChange={e => setJobTitle(e.target.value)}/></div>
         <textarea aria-label="岗位JD" placeholder="岗位 JD 正文" className={`${field} mt-3 h-32`} value={jd} onChange={e => setJd(e.target.value)} maxLength={20000}/>

@@ -29,20 +29,26 @@ export function AppShell({
   const pathname = usePathname();
 
   return (
-    <main className="swiss-grid flex min-h-screen w-full items-start justify-center px-4 py-8 text-black md:px-8 md:py-12">
-      <div className="flex w-full max-w-[86rem] flex-col border border-black bg-[#f0f0e8] shadow-sw-lg">
-        <header className="relative z-30 shrink-0 border-b border-black bg-[#f0f0e8] p-6 md:p-10">
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <Link className="font-mono text-sm font-bold uppercase tracking-wide text-[#1d4ed8]" href="/">
-              求职罗盘
+    <main className="jc-app min-h-screen w-full">
+      <div className="flex min-h-screen w-full flex-col">
+        <header className="relative z-30 border-b border-[var(--border)] bg-white">
+          <div className="mx-auto flex max-w-[86rem] flex-wrap items-center justify-between gap-5 px-5 py-5 md:px-8">
+            <Link className="flex items-center gap-3 text-[var(--foreground)]" href="/" aria-label="求职罗盘首页">
+              <svg aria-hidden="true" className="h-10 w-10 shrink-0 text-[var(--accent)]" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="17" stroke="currentColor" strokeWidth="2" />
+                <path d="m27 13-4 10-10 4 4-10 10-4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                <circle cx="20" cy="20" r="2" fill="currentColor" />
+              </svg>
+              <span><span className="block text-lg font-semibold">求职罗盘</span><span className="block text-xs text-[var(--steel-grey)]">JobCompass</span></span>
             </Link>
-            <nav className="flex flex-wrap gap-2">
+            <nav aria-label="主导航" className="flex flex-wrap gap-1.5">
               {navItems.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <Link
-                    className={`border border-black px-4 py-2 font-mono text-xs font-bold uppercase tracking-wide shadow-sw-sm transition-[transform,box-shadow,background-color,color] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none ${
-                      active ? "bg-[#1d4ed8] text-white" : "bg-[#f0f0e8] text-black"
+                    aria-current={active ? "page" : undefined}
+                    className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      active ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--ink-soft)] hover:bg-[var(--secondary)]"
                     }`}
                     href={item.href}
                     key={item.href}
@@ -53,23 +59,25 @@ export function AppShell({
               })}
             </nav>
           </div>
-          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+        </header>
+        <div className="mx-auto w-full max-w-[86rem] flex-1 px-5 py-7 md:px-8 md:py-9">
+          <div className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-              <p className="font-mono text-sm font-bold uppercase tracking-wide text-[#1d4ed8]">// {eyebrow}</p>
-              <h1 className="mt-5 max-w-5xl font-serif text-5xl font-semibold uppercase leading-[0.95] tracking-tight text-black md:text-7xl">
+              <p className="text-sm font-medium text-[var(--steel-grey)]">{eyebrow}</p>
+              <h1 className="mt-2 max-w-5xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
                 {title}
               </h1>
-              {description ? <p className="mt-6 max-w-2xl font-mono text-sm font-bold uppercase leading-6 tracking-wide text-[#1d4ed8]">{description}</p> : null}
+              {description ? <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--ink-soft)]">{description}</p> : null}
             </div>
             {actions ? <div className="flex flex-wrap gap-3 lg:justify-end">{actions}</div> : null}
           </div>
-        </header>
-        <div className="p-[1.5px]">
-          <div className="space-y-6 p-4 md:p-6">{children}</div>
+          <div className="space-y-6">{children}</div>
         </div>
-        <footer className="relative z-30 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-black bg-[#f0f0e8] p-4 font-mono text-xs font-bold uppercase tracking-wide text-[#1d4ed8]">
-          <span>求职罗盘 JobCompass</span>
-          <span>依据真实经历 · 用户确认后执行</span>
+        <footer className="border-t border-[var(--border)] bg-white">
+          <div className="mx-auto flex max-w-[86rem] flex-wrap items-center justify-between gap-3 px-5 py-5 text-xs text-[var(--steel-grey)] md:px-8">
+            <span>求职罗盘 JobCompass</span>
+            <span>依据真实经历 · 用户确认后执行</span>
+          </div>
         </footer>
       </div>
     </main>

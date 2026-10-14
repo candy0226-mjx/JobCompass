@@ -31,25 +31,25 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-8 backdrop-blur-[2px]" role="presentation">
       <section
         aria-modal="true"
-        className="w-full max-w-xl border border-black bg-[#f0f0e8] text-black shadow-sw-xl"
+        className="w-full max-w-xl overflow-hidden rounded-xl border border-[var(--border)] bg-white text-[var(--foreground)] shadow-sw-xl"
         role="dialog"
       >
-        <div className="border-b border-black bg-black px-5 py-4 text-white">
-          <p className="font-mono text-xs font-black uppercase tracking-[0.22em] text-[#93c5fd]">// {eyebrow}</p>
-          <h2 className="mt-3 font-serif text-4xl font-semibold uppercase leading-none tracking-tight">{title}</h2>
+        <div className="border-b border-[var(--border)] px-5 py-5">
+          <p className="text-xs font-medium text-red-700">{eyebrow}</p>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight">{title}</h2>
         </div>
         <div className="grid gap-5 p-5 md:grid-cols-[auto_1fr]">
-          <div className="flex h-20 w-20 items-center justify-center border-2 border-black bg-[#dc2626] font-mono text-4xl font-black text-white shadow-sw-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-2xl font-semibold text-red-700" aria-hidden="true">
             !
           </div>
           <div>
-            <p className="font-mono text-sm leading-7 text-[#374151]">{description}</p>
-            <p className="mt-4 border border-black bg-[#e5e5e0] p-3 font-mono text-xs font-bold uppercase leading-5 text-[#6b7280]">
+            <p className="text-sm leading-7 text-[var(--ink-soft)]">{description}</p>
+            <p className="mt-4 rounded-lg bg-[var(--secondary)] p-3 text-xs leading-6 text-[var(--steel-grey)]">
               这一步会立即写入数据库；如果有关联记录，系统会按规则一并清理。
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap justify-end gap-3 border-t border-black bg-[#e5e5e0] p-4">
+        <div className="flex flex-wrap justify-end gap-3 border-t border-[var(--border)] bg-white p-4">
           <Button disabled={isWorking} onClick={onCancel} tone="paper" type="button">
             {cancelText}
           </Button>

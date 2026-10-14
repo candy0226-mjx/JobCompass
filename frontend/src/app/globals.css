@@ -3,26 +3,29 @@
 @source "../**/*.{js,ts,jsx,tsx,mdx}";
 
 :root {
-  --background: #f0f0e8;
-  --foreground: #000000;
-  --canvas: #f0f0e8;
-  --ink: #000000;
-  --primary: #1d4ed8;
+  --background: #f7f8fa;
+  --foreground: #1f2937;
+  --canvas: #f7f8fa;
+  --ink: #1f2937;
+  --primary: #1f2937;
   --primary-foreground: #ffffff;
-  --secondary: #e5e5e0;
-  --panel: #d8d8d2;
-  --paper-tint: #f5f5ef;
-  --steel-grey: #6b7280;
-  --ink-soft: #374151;
-  --success: #15803d;
-  --warning: #f97316;
+  --secondary: #f1f5f9;
+  --panel: #eef2f6;
+  --paper-tint: #ffffff;
+  --border: #e2e8f0;
+  --accent: #0f766e;
+  --accent-soft: #eaf7f5;
+  --steel-grey: #64748b;
+  --ink-soft: #475569;
+  --success: #0f766e;
+  --warning: #b45309;
   --destructive: #dc2626;
-  --shadow-sw-xs: 1px 1px 0 #000000;
-  --shadow-sw-sm: 2px 2px 0 #000000;
-  --shadow-sw-default: 4px 4px 0 #000000;
-  --shadow-sw-card: 6px 6px 0 #000000;
-  --shadow-sw-lg: 8px 8px 0 #000000;
-  --shadow-sw-xl: 12px 12px 0 #000000;
+  --shadow-sw-xs: 0 1px 2px rgb(15 23 42 / 4%);
+  --shadow-sw-sm: 0 1px 3px rgb(15 23 42 / 5%);
+  --shadow-sw-default: 0 2px 6px rgb(15 23 42 / 5%);
+  --shadow-sw-card: 0 2px 10px rgb(15 23 42 / 3%);
+  --shadow-sw-lg: 0 8px 24px rgb(15 23 42 / 7%);
+  --shadow-sw-xl: 0 16px 48px rgb(15 23 42 / 12%);
 }
 
 * {
@@ -38,7 +41,8 @@ body {
 
 body {
   margin: 0;
-  font-family: "Geist", "Space Grotesk", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  line-height: 1.6;
 }
 
 button,
@@ -55,10 +59,6 @@ select {
 
 .swiss-grid {
   background-color: var(--background);
-  background-image:
-    linear-gradient(rgba(29, 78, 216, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(29, 78, 216, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
 }
 
 .shadow-sw-xs {
@@ -86,7 +86,7 @@ select {
 }
 
 .panel-scroll {
-  scrollbar-color: var(--ink) transparent;
+  scrollbar-color: #cbd5e1 transparent;
   scrollbar-width: thin;
 }
 
@@ -96,6 +96,69 @@ select {
 }
 
 .panel-scroll::-webkit-scrollbar-thumb {
-  background: var(--ink);
+  background: #cbd5e1;
   border: 2px solid var(--background);
+  border-radius: 8px;
+}
+
+/* Keep legacy page markup and handlers intact while sharing the light theme. */
+.jc-app :where(.font-serif, .font-mono) { font-family: inherit; }
+.jc-app :where(.uppercase) { text-transform: none; letter-spacing: normal; }
+.jc-app :where(.font-black, .font-bold) { font-weight: 600; }
+.jc-app :where([class~="border-black"]) { border-color: var(--border); }
+.jc-app :where([class~="bg-[#f0f0e8]"]) { background-color: white; }
+.jc-app :where([class~="bg-[#e5e5e0]"], [class~="bg-[#d8d8d2]"]) { background-color: var(--secondary); }
+.jc-app :where([class~="bg-[#1d4ed8]"], .bg-blue-700, .bg-black) { background-color: var(--primary); }
+.jc-app :where([class~="text-[#1d4ed8]"], .text-blue-700) { color: var(--accent); }
+.jc-app :where([class~="text-[#6b7280]"]) { color: var(--steel-grey); }
+.jc-app :where(.text-black) { color: var(--foreground); }
+.jc-app :where(.shadow-sw-sm, .shadow-sw-card, .shadow-sw-lg, .shadow-sw-xl) { border-radius: 0.75rem; }
+.jc-app :where(h2) { line-height: 1.4; }
+.jc-app :where(hr) { border-color: var(--border); }
+.jc-app :where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.jc-app :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.75rem;
+  border-color: #cbd5e1;
+  border-radius: 0.5rem;
+  background-color: white;
+  color: var(--foreground);
+}
+.jc-app :where(input, textarea)::placeholder { color: #64748b; }
+.jc-app :where(input[type="checkbox"], input[type="radio"]) {
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.jc-app :where(button[class~="border-black"]) {
+  border-radius: 0.5rem;
+  transition: background-color 150ms;
+}
+.jc-app :where(button:disabled, input:disabled, select:disabled, textarea:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.jc-app :where(button:disabled) { border-color: #cbd5e1; background-color: #e2e8f0; color: #475569; }
+.jc-app :where(input[type="file"]) { font-size: 0.8125rem; }
+.jc-app :where(input[type="file"])::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--secondary);
+  color: var(--foreground);
+  cursor: pointer;
+}
+.jc-app :where(input[type="file"]:disabled)::file-selector-button { cursor: not-allowed; }
+.jc-app :where(details) { border-radius: 0.5rem; }
+.jc-app :where(summary) { cursor: pointer; color: var(--accent); }
+.jc-app :where([class~="border-black"].p-3, [class~="border-black"].p-4) { border-radius: 0.5rem; }
+.jc-step-label { display: flex; align-items: center; gap: 0.65rem; font-size: 0.875rem; color: var(--ink-soft); }
+.jc-step-number { display: inline-flex; width: 2rem; height: 2rem; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jc-app *, .jc-app *::before, .jc-app *::after { transition: none; animation: none; }
 }

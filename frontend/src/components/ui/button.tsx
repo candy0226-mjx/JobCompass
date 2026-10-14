@@ -4,19 +4,19 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "reac
 type Tone = "default" | "ink" | "paper" | "lime" | "gold" | "sky" | "danger" | "success" | "warning";
 
 const toneClasses: Record<Tone, string> = {
-  default: "border-black bg-[#1d4ed8] text-white hover:bg-blue-800",
-  ink: "border-black bg-black text-white hover:bg-[#1d4ed8]",
-  paper: "border-black bg-[#f0f0e8] text-black hover:bg-[#e5e5e0]",
-  lime: "border-black bg-[#15803d] text-white hover:bg-green-800",
-  gold: "border-black bg-[#f97316] text-white hover:bg-orange-600",
-  sky: "border-black bg-[#1d4ed8] text-white hover:bg-blue-800",
-  danger: "border-black bg-[#dc2626] text-white hover:bg-red-700",
-  success: "border-black bg-[#15803d] text-white hover:bg-green-800",
-  warning: "border-black bg-[#f97316] text-white hover:bg-orange-600",
+  default: "border-[var(--primary)] bg-[var(--primary)] text-white hover:bg-[#334155]",
+  ink: "border-[var(--primary)] bg-[var(--primary)] text-white hover:bg-[#334155]",
+  paper: "border-[var(--border)] bg-white text-[var(--foreground)] hover:bg-[var(--secondary)]",
+  lime: "border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[#115e59]",
+  gold: "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100",
+  sky: "border-teal-200 bg-[var(--accent-soft)] text-[var(--accent)] hover:bg-teal-100",
+  danger: "border-red-200 bg-red-50 text-red-700 hover:bg-red-100",
+  success: "border-teal-200 bg-[var(--accent-soft)] text-[var(--accent)] hover:bg-teal-100",
+  warning: "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100",
 };
 
 const baseClass =
-  "relative inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-none border px-6 py-2 font-mono text-sm font-bold uppercase tracking-wide shadow-sw-sm transition-[transform,box-shadow,background-color,color] duration-100 ease-out hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] disabled:pointer-events-none disabled:opacity-50";
+  "relative inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium leading-5 transition-colors disabled:pointer-events-none disabled:opacity-50";
 
 export function Button({
   children,

@@ -96,6 +96,20 @@ git push origin HEAD:main
 
 其他电脑克隆自有仓库后默认使用 `main`；本机保留当前分支名称。初始化上传包含代码、虚构样例和文档，不包含本机数据库、对象存储数据、私有配置或构建产物。公开示例配置需要使用者自行填写。
 
+### 前端版本与回退
+
+原版前端对应提交 `66d7449`，标签 `frontend-original`；方案 A 首版标签为 `frontend-style-a-v1`。标签用于查看或在独立目录体验历史代码，切换代码不会切换本机数据库内容。主题改造为独立提交 `feat: add minimal light frontend theme`，没有调整后端和数据库。
+
+如需在当前分支撤销方案 A，先保存后续未提交修改，再查看主题提交并使用 `revert` 创建一条撤销提交：
+
+```powershell
+git log --oneline --grep="feat: add minimal light frontend theme"
+git revert <上面查到的主题提交ID>
+git push origin HEAD:main
+```
+
+撤销后重新运行 `npm run build` 并重启前端即可生效。若后续提交也修改了相同样式，可能需要处理冲突；不要用整个仓库的强制重置来撤销局部主题。
+
 ## 报告问题
 
 ```text
