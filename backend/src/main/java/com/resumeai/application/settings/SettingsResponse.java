@@ -12,9 +12,13 @@ public record SettingsResponse(
             String springChatModel,
             String springEmbeddingModel,
             String openAiBaseUrl,
+            String openAiChatBaseUrl,
+            String openAiEmbeddingBaseUrl,
             String openAiChatModel,
             String openAiEmbeddingModel,
             boolean openAiApiKeyConfigured,
+            boolean openAiChatApiKeyConfigured,
+            boolean openAiEmbeddingApiKeyConfigured,
             String ollamaBaseUrl,
             String ollamaChatModel,
             String ollamaEmbeddingModel

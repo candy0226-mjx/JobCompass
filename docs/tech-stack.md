@@ -1,180 +1,45 @@
-# Technology Stack
+# JobCompass 技术栈与用途
 
-## Backend Recommendation
+最后核对：2026-10-13。版本以 `backend/pom.xml`、`frontend/package-lock.json` 和部署文件为准；这里记录用途，不固定未来必须使用某个供应商或版本。
 
-Use Java 21, Spring Boot 4.1, and Spring AI 2.0 as the primary backend stack.
+## 当前技术
 
-This matches the project goal because it can show:
-
-- Model deployment and invocation
-- Prompt engineering
-- Generic document parsing
-- RAG with PGvector
-- Tool calling
-- Agent-style orchestration
-- Production-like service layering
-
-## Backend Choices
-
-| Area | Recommended Choice | Why |
+| 技术 | 当前版本或入口 | 用途 |
 |---|---|---|
-| Runtime | Java 21 | Modern LTS, strong Spring ecosystem |
-| Framework | Spring Boot 4.1 | Modern Spring runtime already used by the backend |
-| AI framework | Spring AI | Native Java integration for ChatClient, VectorStore, Advisors, Tool Calling |
-| API style | REST + SSE | REST for normal operations, SSE for streaming AI progress |
-| Database | PostgreSQL | Reliable relational store |
-| Vector search | PGvector | Keeps vector and relational data together |
-| ORM | Spring Data JPA | Simple domain persistence |
-| Migration | Flyway | Repeatable database setup |
-| Document parsing | Apache Tika + PDFBox + docx4j | PDF/DOCX/TXT parsing in Java |
-| Object storage | MinIO | Stores original and exported files |
-| Cache/progress | Redis/ReBloom | Health-checked now; useful for async progress, SSE state, and Bloom-filter dedupe later |
-| API docs | REST contract documents | Frontend/backend contract visibility |
-| Testing | JUnit 5 | Covers parser and core service behavior |
+| Java / Spring Boot | Java 21、Boot 4.1.0 | 业务接口、依赖注入、事务与健康检查 |
+| Spring AI | 2.0.0 | ChatClient、Tool Calling、结构化输出及上游 VectorStore |
+| DeepSeek / 百炼 | 根私有配置选择 | 当前方案分别承担聊天与向量化；切换前验证能力 |
+| Spring Data JPA | Boot 管理依赖 | 上游实体和业务持久化 |
+| JdbcTemplate / TransactionTemplate | Spring 既有依赖 | 新快照、报告、计划、事件和显式版本检查 |
+| PostgreSQL / pgvector | 部署镜像 `pgvector/pgvector:pg17` | 关系数据与上游向量检索 |
+| Flyway | V1–V10 | 表、扩展与增量结构管理；V10 为追问和证据卡 |
+| Redis | `redis:8-alpine` | 上游保留基础能力；新分析不是 Redis 队列 |
+| Silo + MinIO Java 客户端 | 本地覆盖文件选择 Silo；客户端 8.6.0 | 兼容 MinIO API 的文件上传、删除和导出存储 |
+| Tika / PDFBox / docx4j | 3.2.3 / 3.0.6 / 11.5.6 | 上游文档解析与导出；新 PDF 输入复用解析/边界检查 |
+| Next.js / React / TypeScript | 16 / 19 / 5，具体由锁文件确定 | 页面路由、表单、状态查询和类型约定 |
+| Tailwind CSS | 4 | 页面样式 |
+| Maven / npm / Docker Compose | 已有工具链 | 构建、依赖和基础服务启动 |
+| JUnit / Spring Boot Test | 依赖树管理 | 普通规则测试与显式 PostgreSQL/真实模型测试 |
 
-## Spring AI Components
+## 技术解决的问题
 
-Use these Spring AI capabilities deliberately:
+- 能力判断：受限工具读取固定资料，模型理解后由 Java 校验结构与引用。
+- 多岗位准备：Java 的技能映射、任务合并和预算规则负责可解释取舍。
+- 数据一致性：数据库事务、行锁、唯一约束、幂等键和版本条件更新。
+- 等待体验：本机有界线程池执行模型任务，前端轮询状态，进度保存在 PostgreSQL。
+- 资料追溯：不可变版本与运行快照、独立复核、来源关联与变更事件。
+- 经历追问：Spring AI 提出针对性问题，Java 按完整回答形成来源明确的证据卡；确认与历史快照通过短事务保存。
 
-- `ChatClient`: central LLM invocation API
-- Structured output converters: resume/JD JSON extraction
-- `VectorStore`: PGvector integration
-- Advisors: RAG context injection
-- Tool Calling: expose backend functions to LLM workflows
-- Model provider abstraction: OpenAI-compatible APIs and Ollama
+## 需要准确区分的能力
 
-## LLM Provider Strategy
+当前没有新业务 SSE、消息队列、Redisson、ReBloom 去重、多用户鉴权、全应用 Docker 部署或动态 Data Provider。Redis 安装并不等于实现了缓存治理/分布式锁；依赖存在不等于所有能力已验证。
 
-Support provider abstraction from the start, but only implement two providers in MVP:
+新证据流程没有知识库召回；pgvector 主要服务原知识库。旧检索异常或没有结果时尝试文本查询；索引仍需要向量模型。预算采用贪心规则，不能写成全局最优算法。
 
-- OpenAI-compatible HTTP API for cloud models
-- Ollama for local deployment
+模型名是可改的私有配置，历史样例模型见评估 JSON。更新向量维度需连同表结构和已有索引考虑，不只修改模型名。
 
-This gives a clean story for both deployed model calls and local privacy-first runs.
+## 演进方式
 
-Suggested config:
+接口与框架变化后更新本表；新依赖先说明它解决的具体问题，再将实施与验证写入 [实施计划](实施计划.md) 和 [验收记录](验收记录.md)。当前源码无需为了文档结构额外引入框架。
 
-```yaml
-resume-ai:
-  llm:
-    provider: openai-compatible
-    model: gpt-4o-mini
-    base-url: https://api.openai.com
-  embedding:
-    provider: openai-compatible
-    model: text-embedding-3-small
-```
-
-For Ollama:
-
-```yaml
-resume-ai:
-  llm:
-    provider: ollama
-    model: llama3.1
-    base-url: http://localhost:11434
-  embedding:
-    provider: ollama
-    model: nomic-embed-text
-```
-
-## Frontend Recommendation
-
-Use Next.js with TypeScript.
-
-| Area | Recommended Choice | Why |
-|---|---|---|
-| Framework | Next.js | Good routing, product pages, SSR where needed |
-| Language | TypeScript | Safer frontend API contracts |
-| Styling | Tailwind CSS | Fast systemized UI |
-| Components | Local component primitives | Keep the product UI small and easy to audit |
-| Data fetching | Native `fetch` wrapper | Matches the current API surface without extra state libraries |
-| Local state | React state | Enough for the current single-user workflow |
-| Forms | Controlled React forms | Keeps dependencies minimal until validation needs grow |
-| Upload | Native file input | Works for PDF/DOCX/TXT without an additional upload library |
-| Charts | CSS/SVG primitives | Current score cards and rings are custom components |
-
-## Why Not Vue or Plain React
-
-Vue is viable, but the copied reference project is already Next.js-shaped, and Resume Builder style workflows benefit from Next.js routing and React ecosystem libraries.
-
-Plain Vite React is lighter, but Next.js gives a more complete app structure for dashboard, builder, print/export routes, and future auth.
-
-## Database Split
-
-Use PostgreSQL for:
-
-- Users
-- Resumes
-- Parsed resume sections
-- Job descriptions
-- Analyses
-- Suggestions
-- Rewrite drafts
-- Export records
-- Knowledge documents
-- Vector chunks with PGvector
-
-Use MinIO for:
-
-- Original uploaded files
-- Generated PDF/DOCX
-- Large intermediate artifacts if needed
-
-Use Redis for:
-
-- Async job progress
-- SSE stream coordination
-- Short-lived provider health cache
-- Optional Bloom-filter dedupe with ReBloom
-
-## Prompt Engineering Strategy
-
-Keep prompts versioned as backend resources:
-
-```text
-backend/src/main/resources/prompts/
-  resume-structure.st
-  job-structure.st
-  match-analysis.st
-  rewrite-section.st
-  verify-faithfulness.st
-```
-
-Each prompt should define:
-
-- Role
-- Input schema
-- Output JSON schema
-- Constraints
-- Examples
-- Safety rules around not inventing experience
-
-## Testing Strategy
-
-Prioritize these tests:
-
-- Parser tests with sample PDF/DOCX/TXT files
-- Prompt contract tests with fixed LLM responses
-- Repository tests against PostgreSQL + PGvector
-- API tests for upload/analyze/rewrite flows
-- Frontend component tests for analysis and rewrite views
-
-Avoid relying only on live LLM calls for correctness.
-
-## Deployment Strategy
-
-Local development:
-
-- Docker Compose can start PostgreSQL/PGvector, Redis, MinIO, and Ollama
-- Backend runs from IDE or Maven
-- Frontend runs with pnpm/npm dev
-
-Release deployment:
-
-- Backend container
-- Frontend container
-- PostgreSQL/PGvector
-- Redis/ReBloom for async progress and dedupe
-- MinIO
-- Optional Ollama GPU machine or cloud OpenAI-compatible model provider
+完整运行与配置参见 [使用手册](USER_GUIDE.md)、[数据接入](DATA_PROVIDER.md)。

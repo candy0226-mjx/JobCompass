@@ -1,176 +1,27 @@
-# Roadmap
+# JobCompass 路线图
 
-## Phase 0: Architecture Foundation
+最后核对：2026-10-14。本文件只保留方向摘要，具体工作状态与验收条件统一在 [实施计划](实施计划.md) 维护，可以随需求调整。
 
-Goal: Lock project boundaries before generating large amounts of code.
+## 已实现的主线
 
-Deliverables:
+1. 固定简历与岗位分析依据，输出可引用、可复核的证据报告。
+2. 合并同版本多个岗位的准备事项，按预算安排可编辑草稿。
+3. 确认计划，记录准备进度、手动投递与变更事件。
+4. 维护对应测试、评估样例和可持续更新的文档。
+5. 根据岗位要求追问真实经历，生成用户确认的证据卡并保留历史；来源与原报告区分。
 
-- Architecture document
-- Technology stack decision
-- API design
-- Backend/frontend/deploy workspace layout
-- Docker Compose infrastructure plan
+上游上传、评分、知识库、改写和导出继续保留。2026-10-14 已完成原 AI 改写/导出的一份虚构样例主流程回归，并修复候选确认时元数据未同步保存的问题；不是全部格式或模型质量的全面评估。
 
-## Phase 1: Backend Skeleton
+## 可以选择的下一步
 
-Goal: Create a runnable Spring Boot backend.
+| 方向 | 当前状态 | 参考任务 |
+|---|---|---|
+| 开发体验与可复现演示 | 待开发 | N01、N02 |
+| 自有岗位数据导入 | 待开发 | N03 |
+| 知识库准备建议 | 待开发 | N04 |
+| 任务持久化与恢复 | 待开发 | N05 |
+| lint / CI / 完整部署 | 待开发 | N06、N07 |
+| 多用户与权限 | 待开发 | N08 |
+| 原流程完整回归 | 已完成（本机样例） | N09；见验收记录 |
 
-Deliverables:
-
-- Maven or Gradle project
-- Java 21
-- Spring Boot web API
-- Spring AI dependencies
-- PostgreSQL, Flyway, JPA
-- Health/status endpoints
-- OpenAPI docs
-- Basic exception handling
-
-Suggested packages:
-
-```text
-com.resumeai.interfaces
-com.resumeai.application
-com.resumeai.domain
-com.resumeai.infrastructure
-com.resumeai.agent
-```
-
-## Phase 2: Document Upload and Parsing
-
-Goal: Support raw resume ingestion.
-
-Deliverables:
-
-- Upload PDF/DOCX/TXT
-- Save file in MinIO
-- Extract text with Tika/PDFBox/docx4j
-- Store parsed Markdown/plain text
-- LLM structured extraction into resume JSON
-
-Acceptance:
-
-- Upload at least one PDF and one DOCX sample
-- Persist raw file metadata
-- Persist parsed text
-- Return structured resume sections
-
-## Phase 3: Job Description and Matching
-
-Goal: Analyze resume fit against a target JD.
-
-Deliverables:
-
-- Create JD
-- Extract structured requirements
-- Keyword match score
-- Embedding semantic score
-- LLM match report
-- Evidence map from requirement to resume section
-
-Acceptance:
-
-- A user can upload a resume, paste JD, and receive a score plus missing requirements.
-
-## Phase 4: RAG Knowledge Base
-
-Goal: Use PGvector to improve analysis quality.
-
-Deliverables:
-
-- Knowledge document CRUD
-- Chunking
-- Embedding generation
-- PGvector storage
-- RAG retrieval during analysis
-- Built-in seed docs for resume writing rules and ATS guidance
-
-Acceptance:
-
-- Analysis prompt includes retrieved guidance chunks.
-- Vector search can be tested independently.
-
-## Phase 5: Rewrite Studio
-
-Goal: Generate useful, faithful resume rewrites.
-
-Deliverables:
-
-- Rewrite selected resume sections
-- Show original vs generated text
-- Explain why changes were made
-- Verify generated rewrite does not invent facts
-- Accept/reject rewrite drafts
-
-Acceptance:
-
-- User can improve a project experience bullet list for a target JD.
-
-## Phase 6: Frontend Product Shell
-
-Goal: Build a usable web workflow.
-
-Deliverables:
-
-- Dashboard
-- Upload page
-- Analysis report page
-- Rewrite Studio
-- Settings page
-- SSE progress display
-
-Acceptance:
-
-- User can complete the MVP workflow without API tools.
-
-## Phase 7: Export
-
-Goal: Produce polished application artifacts.
-
-Deliverables:
-
-- Markdown export
-- PDF export
-- Optional DOCX export
-- Resume template selection
-
-Acceptance:
-
-- User can download an optimized resume.
-
-## Phase 8: Agent and Tool Hardening
-
-Goal: Make the AI workflow more explicit and observable.
-
-Deliverables:
-
-- Spring AI tool definitions
-- Single orchestrating resume optimization agent
-- Tool call logging
-- Prompt versioning
-- Model/provider settings
-
-Acceptance:
-
-- Product workflow can show agent invoking tools for parsing, retrieval, scoring, and rewriting.
-
-## Phase 9: Quality and Release Polish
-
-Goal: Prepare for presentation, submission, and public repository release.
-
-Deliverables:
-
-- Sample data
-- Seed knowledge documents
-- README run guide
-- Screenshots
-- PostgreSQL/PGvector integration tests
-- Frontend workflow tests
-- Chinese README and clean public examples
-
-Current progress:
-
-- Sample resume, JD, and RAG guidance live under `samples/`.
-- Built-in seed knowledge documents are created on backend startup.
-- The main README documents local startup, configuration, and the complete resume optimization workflow.
+根据求职目标、实际问题和可投入时间选择一项推进，不预设必须完成全部方向。新增或调整任务时先更新实施计划，再按实现结果修改本摘要。

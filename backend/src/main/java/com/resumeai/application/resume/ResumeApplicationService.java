@@ -87,6 +87,10 @@ public class ResumeApplicationService {
 
     @Transactional
     public void delete(UUID resumeId) {
+        // Guard before deleting the object: new immutable versions deliberately restrict parent deletion.
+        if (resumeRepository.hasCompassVersions(resumeId)) {
+            throw new IllegalArgumentException("该简历已有求职罗盘版本，请保留原文件和版本记录。");
+        }
         var resume = resumeRepository.findById(resumeId)
                 .orElseThrow(() -> new IllegalArgumentException("Resume not found: " + resumeId));
         if (resume.getObjectKey() != null && !resume.getObjectKey().isBlank()) {

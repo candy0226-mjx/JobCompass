@@ -51,10 +51,14 @@ spring:
       api-key: ${OPENAI_API_KEY:}
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}
       chat:
+        api-key: ${OPENAI_CHAT_API_KEY:${OPENAI_API_KEY:}}
+        base-url: ${OPENAI_CHAT_BASE_URL:${OPENAI_BASE_URL:https://api.openai.com}}
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
           temperature: 0.2
       embedding:
+        api-key: ${OPENAI_EMBEDDING_API_KEY:${OPENAI_API_KEY:}}
+        base-url: ${OPENAI_EMBEDDING_BASE_URL:${OPENAI_BASE_URL:https://api.openai.com}}
         options:
           model: ${OPENAI_EMBEDDING_MODEL:text-embedding-v4}
           dimensions: ${RAG_EMBEDDING_DIMENSIONS:1024}

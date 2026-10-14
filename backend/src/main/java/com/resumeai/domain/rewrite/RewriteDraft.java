@@ -95,6 +95,18 @@ public class RewriteDraft {
         this.status = RewriteDraftStatus.DRAFT;
     }
 
+    public void recordCandidateGeneration(String history) {
+        replaceConversationHistory(history);
+        this.regeneratedCount += 1;
+    }
+
+    public void applyCandidate(String text, String candidateRationale, String candidateVerification) {
+        this.rewrittenText = text;
+        this.rationale = candidateRationale;
+        this.verificationJson = candidateVerification;
+        this.status = RewriteDraftStatus.ACCEPTED;
+    }
+
     public void setStatus(RewriteDraftStatus status) {
         this.status = status;
     }

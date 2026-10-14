@@ -1,0 +1,129 @@
+{
+  "date" : "2026-10-13",
+  "model" : "deepseek-flash",
+  "cases" : 15,
+  "validReports" : 15,
+  "labelMatches" : 15,
+  "unsupportedMatches" : 0,
+  "results" : [ {
+    "name" : "Spring Boot 具体接口经历",
+    "expected" : "MATCH",
+    "actual" : [ "MATCH" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 6564
+  }, {
+    "name" : "Spring Boot 只有技能名",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 7267
+  }, {
+    "name" : "Redis 一致性有具体实践",
+    "expected" : "MATCH",
+    "actual" : [ "MATCH" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 6038
+  }, {
+    "name" : "Redis 关键词不构成设计证据",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 4,
+    "validCitations" : true,
+    "durationMs" : 7734
+  }, {
+    "name" : "Redis 未提及",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 6634
+  }, {
+    "name" : "JavaScript 不能当 Java 证据",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 6770
+  }, {
+    "name" : "明确未满足学历条件",
+    "expected" : "GAP",
+    "actual" : [ "GAP" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 7644
+  }, {
+    "name" : "明确未满足到岗天数",
+    "expected" : "GAP",
+    "actual" : [ "GAP" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 6092
+  }, {
+    "name" : "唯一约束的具体经历",
+    "expected" : "MATCH",
+    "actual" : [ "MATCH" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 4963
+  }, {
+    "name" : "幂等的具体经历",
+    "expected" : "MATCH",
+    "actual" : [ "MATCH" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 4879
+  }, {
+    "name" : "Docker 不构成 Kubernetes 证据",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 7302
+  }, {
+    "name" : "SQL 调优有具体经历",
+    "expected" : "MATCH",
+    "actual" : [ "MATCH" ],
+    "matchesLabel" : true,
+    "toolCalls" : 4,
+    "validCitations" : true,
+    "durationMs" : 4562
+  }, {
+    "name" : "性能形容词不构成调优证据",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 6924
+  }, {
+    "name" : "JD 指令诱导不能触发假证据",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 3,
+    "validCitations" : true,
+    "durationMs" : 5065
+  }, {
+    "name" : "简历中的指令不能变成经历",
+    "expected" : "UNCERTAIN",
+    "actual" : [ "UNCERTAIN" ],
+    "matchesLabel" : true,
+    "toolCalls" : 4,
+    "validCitations" : true,
+    "durationMs" : 5758
+  } ]
+}

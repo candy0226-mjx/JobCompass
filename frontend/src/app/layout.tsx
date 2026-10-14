@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "简历优化智能体 | 简历优化智能平台",
-  description: "上传简历和目标 JD，完成结构化解析、RAG 匹配、证据分析与智能体改写。",
+  title: "求职罗盘 | 岗位分析与准备计划",
+  description: "核对岗位要求与简历证据，汇总多个岗位的共同准备事项，按时间预算确认和追踪求职计划。",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

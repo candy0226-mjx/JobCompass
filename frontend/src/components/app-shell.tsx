@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 const navItems = [
+  { href: "/compass", label: "求职罗盘" },
+  { href: "/applications", label: "投递记录" },
   { href: "/dashboard", label: "工作台" },
   { href: "/upload", label: "简历定制" },
   { href: "/knowledge", label: "知识库" },
@@ -32,7 +34,7 @@ export function AppShell({
         <header className="relative z-30 shrink-0 border-b border-black bg-[#f0f0e8] p-6 md:p-10">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
             <Link className="font-mono text-sm font-bold uppercase tracking-wide text-[#1d4ed8]" href="/">
-              简历优化智能体
+              求职罗盘
             </Link>
             <nav className="flex flex-wrap gap-2">
               {navItems.map((item) => {
@@ -66,8 +68,8 @@ export function AppShell({
           <div className="space-y-6 p-4 md:p-6">{children}</div>
         </div>
         <footer className="relative z-30 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-black bg-[#f0f0e8] p-4 font-mono text-xs font-bold uppercase tracking-wide text-[#1d4ed8]">
-          <span>简历优化智能体</span>
-          <span>PGvector / MinIO / DeepSeek</span>
+          <span>求职罗盘 JobCompass</span>
+          <span>依据真实经历 · 用户确认后执行</span>
         </footer>
       </div>
     </main>

@@ -1,0 +1,24 @@
+import { API_BASE_URL } from "./client";
+export type Segment = { id: string; text: string };
+export type Version = { id: string; resumeId: string; versionNo: number; text: string; hash: string; segments: Segment[] };
+export type Job = { id: string; title: string; company: string; text: string; hash: string; deadline: string | null; segments: Segment[] };
+export type Ref = { segmentId: string; quote: string };
+export type Requirement = { id: string; text: string; kind: "REQUIRED" | "PREFERRED"; skillKey: string | null; jdEvidence: Ref };
+export type Assessment = { requirementId: string; status: "MATCH" | "GAP" | "UNCERTAIN"; resumeEvidence: Ref[]; reason: string; actionType: string; taskTitle: string; expectedOutput: string; effortMinutes: number };
+export type Review = { requirementId: string; category: string; note: string; version: number; skillKey: string | null };
+export type Run = { id: string; status: string; resumeVersionId: string; job: Job; report: { requirements: Requirement[]; assessments: Assessment[] } | null; reviews: Review[]; errorCode: string | null; durationMs: number | null; toolCalls: number };
+export type Task = { id: string; skillKey: string; actionType: string; title: string; expectedOutput: string; effortMinutes: number; selected: boolean; requirementIds: string[]; jobIds: string[]; benefit: number; priority: number; deadline: string | null; explanation: string; status: string; version: number };
+export type Plan = { id: string; status: string; version: number; budgetMinutes: number; allocatedMinutes: number; sources: { analysisId: string; jobId: string; title: string; company: string; priority: number; deadline: string | null }[]; tasks: Task[] };
+export type Application = { id: string; jobId: string; title: string; company: string; status: string; note: string; version: number };
+export type ActivityEvent = { id: string; resourceId: string; resourceType: string; oldValue: string | null; newValue: string; version: number; occurredAt: string };
+export type ExperienceQuestion = { id: string; focus: "SCENARIO" | "IMPLEMENTATION" | "VALIDATION"; question: string };
+export type ExperienceAnswer = { questionId: string; text: string };
+export type ExperienceDraft = { title: string; sourceType: "USER_SUPPLIED" | "USER_CONFIRMED"; facts: { questionId: string; focus: string; quote: string; sourceType: "USER_ANSWER" }[] };
+export type ExperienceCard = { id: string; inquiryId: string; analysisId: string; requirementId: string; resumeVersionId: string; answerVersion: number; sourceType: "USER_CONFIRMED"; questions: ExperienceQuestion[]; answers: ExperienceAnswer[]; content: ExperienceDraft; confirmedAt: string };
+export type ExperienceSession = { id: string; analysisId: string; requirementId: string; status: "QUESTIONS_PENDING" | "ANSWERING" | "CARD_DRAFT" | "CONFIRMED" | "FAILED"; version: number; questions: ExperienceQuestion[]; answers: ExperienceAnswer[]; draft: ExperienceDraft | null; cards: ExperienceCard[]; errorCode: string | null; durationMs: number | null };
+export async function compass<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, { method, headers: body instanceof FormData ? undefined : { "Content-Type": "application/json" }, body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body), cache: "no-store" });
+  if (!response.ok) { let message = `请求失败 ${response.status}`; try { const error = await response.json(); message = error.message || message; } catch {} throw new Error(message); }
+  return response.json();
+}
+export const statusLabel: Record<string, string> = { PENDING: "等待分析", RUNNING: "正在分析", SUCCEEDED: "分析成功", FAILED: "分析失败", MATCH: "有证据", GAP: "明确缺口", UNCERTAIN: "证据不足", REQUIRED: "必备", PREFERRED: "加分", EVIDENCE_FIX: "完善经历表述", LEARN: "完成实践任务", CLARIFY: "核实情况", NONE: "暂无任务", CONFIRMED_MATCH: "已核实，无需准备", DRAFT_EDITED: "草稿已调整", DRAFT: "待确认草稿", CONFIRMED: "已确认", ARCHIVED: "已归档", TODO: "待准备", DOING: "准备中", DONE: "已完成", SKIPPED: "已跳过", PLANNED: "计划投递", APPLIED: "已投递", INTERVIEW: "面试中", OFFER: "收到 Offer", REJECTED: "未通过", WITHDRAWN: "已撤回" };

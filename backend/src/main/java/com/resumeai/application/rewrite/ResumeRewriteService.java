@@ -122,7 +122,7 @@ public class ResumeRewriteService {
             userMessage = "请重新改写，提供更优版本。";
         }
         var generated = generateRewriteWithContext(analysis, originalText, draft, userMessage);
-        var candidateConversation = appendConversationJson(draft.getConversationHistory(), userMessage, generated.rationale());
+        var candidateConversation = rememberCandidate(draft, userMessage, generated);
         return new RewriteCandidateResponse(
                 draft.getId(),
                 userMessage,
@@ -131,7 +131,7 @@ public class ResumeRewriteService {
                 verificationJson(generated, originalText),
                 originalText,
                 candidateConversation,
-                draft.getRegeneratedCount() + 1,
+                draft.getRegeneratedCount(),
                 draft.getStatus().name(),
                 summarizeRewriteSuggestions(analysis, generated.rewrittenText(), userMessage)
         );
@@ -144,8 +144,23 @@ public class ResumeRewriteService {
         if (request == null || request.rewrittenText() == null || request.rewrittenText().isBlank()) {
             throw new IllegalArgumentException("Rewritten text is required.");
         }
-        draft.updateRewrittenText(request.rewrittenText().trim());
-        draft.setStatus(RewriteDraftStatus.ACCEPTED);
+        var history = readHistory(draft);
+        var candidateEntry = latestCandidate(history);
+        var candidate = candidateEntry.path("candidate");
+        if (!candidate.path("rewrittenText").asText().strip().equals(request.rewrittenText().strip())) {
+            throw new IllegalArgumentException("候选已更新，请重新生成或查看最新候选后确认。");
+        }
+        var candidateState = candidateEntry.path("candidateState").asText();
+        if ("ACCEPTED".equals(candidateState) && draft.getStatus() == RewriteDraftStatus.ACCEPTED) {
+            return RewriteDraftResponse.from(draft);
+        }
+        if (!"PENDING".equals(candidateState)) {
+            throw new IllegalArgumentException("该候选已处理，请重新生成候选。");
+        }
+        draft.applyCandidate(candidate.path("rewrittenText").asText().strip(),
+                candidate.path("rationale").asText(), candidate.path("verificationJson").asText());
+        candidateEntry.put("candidateState", "ACCEPTED");
+        draft.replaceConversationHistory(history.toString());
         return RewriteDraftResponse.from(rewriteDraftRepository.save(draft));
     }
 
@@ -153,6 +168,14 @@ public class ResumeRewriteService {
     public RewriteDraftResponse reject(UUID rewriteId, RejectRewriteCandidateRequest request) {
         var draft = rewriteDraftRepository.findById(rewriteId)
                 .orElseThrow(() -> new IllegalArgumentException("Rewrite draft not found: " + rewriteId));
+        var history = readHistory(draft);
+        for (var entry : history) {
+            if (entry instanceof com.fasterxml.jackson.databind.node.ObjectNode object
+                    && "PENDING".equals(object.path("candidateState").asText())) {
+                object.put("candidateState", "REJECTED");
+            }
+        }
+        draft.replaceConversationHistory(history.toString());
         draft.setStatus(RewriteDraftStatus.REJECTED);
         if (request != null && request.reason() != null && !request.reason().isBlank()) {
             draft.replaceConversationHistory(appendConversationJson(
@@ -390,6 +413,50 @@ public class ResumeRewriteService {
             return "";
         }
         return historyContext.toString();
+    }
+
+    // Reuse the existing JSON history column; preserve the applied text until an explicit decision.
+    String rememberCandidate(RewriteDraft draft, String userMessage, RewriteGeneration generated) {
+        if (generated == null || generated.rewrittenText() == null || generated.rewrittenText().isBlank()) {
+            throw new IllegalArgumentException("模型没有生成可用候选，请重新尝试。");
+        }
+        var history = readHistory(draft);
+        for (var entry : history) {
+            if (entry instanceof com.fasterxml.jackson.databind.node.ObjectNode object
+                    && "PENDING".equals(object.path("candidateState").asText())) {
+                object.put("candidateState", "SUPERSEDED");
+            }
+        }
+        var withMessages = appendConversationJson(history.toString(), userMessage, generated.rationale());
+        try {
+            var messages = (com.fasterxml.jackson.databind.node.ArrayNode) objectMapper.readTree(withMessages);
+            var assistant = (com.fasterxml.jackson.databind.node.ObjectNode) messages.get(messages.size() - 1);
+            assistant.put("candidateState", "PENDING");
+            assistant.set("candidate", objectMapper.valueToTree(new RewriteGeneration(generated.rewrittenText().strip(),
+                    generated.rationale(), verificationJson(generated, draft.getOriginalText()))));
+            draft.recordCandidateGeneration(messages.toString());
+            rewriteDraftRepository.save(draft);
+            return draft.getConversationHistory();
+        } catch (Exception exception) {
+            throw new IllegalStateException("候选保存失败，请重新尝试。", exception);
+        }
+    }
+
+    private com.fasterxml.jackson.databind.node.ArrayNode readHistory(RewriteDraft draft) {
+        try {
+            var value = objectMapper.readTree(draft.getConversationHistory());
+            if (value instanceof com.fasterxml.jackson.databind.node.ArrayNode history) return history;
+            throw new IllegalArgumentException("对话历史格式无效。");
+        } catch (Exception exception) {
+            throw new IllegalStateException("对话历史读取失败。", exception);
+        }
+    }
+
+    private com.fasterxml.jackson.databind.node.ObjectNode latestCandidate(com.fasterxml.jackson.databind.node.ArrayNode history) {
+        for (int i = history.size() - 1; i >= 0; i--) {
+            if (history.get(i) instanceof com.fasterxml.jackson.databind.node.ObjectNode entry && entry.has("candidate")) return entry;
+        }
+        throw new IllegalArgumentException("没有可确认的候选，请先生成新候选。");
     }
 
     private String appendConversationJson(String historyJson, String userMessage, String assistantMessage) {

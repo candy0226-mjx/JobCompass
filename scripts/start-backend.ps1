@@ -35,7 +35,17 @@ if (-not $env:SPRING_DOCKER_COMPOSE_ENABLED) {
 
 Push-Location $repoRoot
 try {
-  mvn -f backend/pom.xml spring-boot:run
+  $maven = Get-Command mvn -ErrorAction SilentlyContinue
+  if ($maven) {
+    & $maven.Source -f backend/pom.xml spring-boot:run
+  }
+  else {
+    $wrapper = Get-ChildItem -Path (Join-Path $HOME '.m2\wrapper\dists\apache-maven-3.9.16-bin\*\apache-maven-3.9.16\bin\mvn.cmd') -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $wrapper) {
+      throw 'Maven was not found. Install Maven 3.9+ or add mvn to PATH.'
+    }
+    & $wrapper.FullName -f backend/pom.xml spring-boot:run
+  }
 }
 finally {
   Pop-Location

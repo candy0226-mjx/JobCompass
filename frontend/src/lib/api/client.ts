@@ -125,9 +125,13 @@ export type SettingsResponse = {
     springChatModel: string;
     springEmbeddingModel: string;
     openAiBaseUrl: string;
+    openAiChatBaseUrl: string;
+    openAiEmbeddingBaseUrl: string;
     openAiChatModel: string;
     openAiEmbeddingModel: string;
     openAiApiKeyConfigured: boolean;
+    openAiChatApiKeyConfigured: boolean;
+    openAiEmbeddingApiKeyConfigured: boolean;
     ollamaBaseUrl: string;
     ollamaChatModel: string;
     ollamaEmbeddingModel: string;

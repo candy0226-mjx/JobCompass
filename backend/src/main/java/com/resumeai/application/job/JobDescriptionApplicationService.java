@@ -61,6 +61,9 @@ public class JobDescriptionApplicationService {
 
     @Transactional
     public void delete(UUID jobId) {
+        if (jobDescriptionRepository.hasCompassReferences(jobId)) {
+            throw new IllegalArgumentException("该岗位已有证据分析或申请记录，请保留历史资料。");
+        }
         var job = jobDescriptionRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Job description not found: " + jobId));
         jobDescriptionRepository.delete(job);

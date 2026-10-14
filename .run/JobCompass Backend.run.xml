@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="JobCompass Backend" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.resumeai.ResumeAiAgentApplication" />
+    <module name="resume-ai-backend" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+    <option name="SHORTEN_COMMAND_LINE" value="classpathFile" />
+    <method v="2"><option name="Make" enabled="true" /></method>
+  </configuration>
+</component>

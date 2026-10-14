@@ -1,228 +1,97 @@
-# Architecture
+# JobCompass 当前架构
 
-## Product Goal
+最后核对：2026-10-13。本文件描述已实现结构，未来方案在 [实施计划](实施计划.md) 中标记。原架构文档中的规划内容已按当前源码更新；上游基础功能及 Git 历史保留。
 
-Build an intelligent resume optimization platform for job seekers.
-
-Users upload an original resume and provide a target job description. The system parses both documents, matches resume evidence against role requirements, identifies missing or weak areas, and provides either actionable suggestions or rewritten resume sections.
-
-## Reference Project
-
-The copied reference project at `参考/Resume-Matcher` provides useful product patterns:
-
-- Resume upload and parsing
-- Job description upload
-- Tailored resume generation
-- JD match comparison
-- Resume builder and PDF export
-- LLM provider configuration
-- Multi-page frontend workflow
-
-This rewrite should keep the product direction but rebuild the backend around Java and Spring AI.
-
-## System Context
+## 1. 从使用流程看模块
 
 ```mermaid
-flowchart LR
-  User["Job seeker"] --> Frontend["Frontend web app"]
-  Frontend --> API["Spring Boot API"]
-  API --> Parser["Document parser"]
-  API --> Agent["Resume optimization agent"]
-  Agent --> LLM["LLM providers"]
-  Agent --> Vector["PGvector knowledge base"]
-  API --> DB["PostgreSQL"]
-  API --> ObjectStore["MinIO"]
-  API --> Redis["Redis/ReBloom"]
+flowchart TD
+    U["用户：简历与目标岗位"] --> F["Next.js 工作台"]
+    F --> S["输入与不可变版本 / JD 快照"]
+    S --> E["后台分析：提取要求 → 核对经历"]
+    E --> T["受限只读工具"]
+    T --> L["Spring AI / 聊天模型"]
+    L --> V["Java 结构与引用校验"]
+    V --> R["报告 + 人工复核"]
+    R --> B["Java 任务合并与预算安排"]
+    B --> P["草稿编辑 → 事务确认"]
+    P --> A["任务进度 / 手动投递记录"]
+    S --> DB[("PostgreSQL")]
+    R --> DB
+    P --> DB
+    A --> DB
 ```
 
-## Backend Modules
+新分析直接读取简历和岗位快照，不走知识库召回。上游知识库使用独立的 pgvector 检索流程，提供写作与岗位建议。
 
-```text
-backend/src/main/java/com/resumeai/
-  interfaces/       # REST, SSE, request/response DTOs
-  application/      # Use cases and orchestration services
-  domain/           # Domain models and domain services
-  infrastructure/   # JPA, PGvector, Redis, MinIO, parsers, LLM adapters
-  agent/            # Spring AI prompts, tools, RAG, advisors, workflows
-```
+## 2. 目录与职责
 
-### Interfaces Layer
+| 位置 | 当前职责 |
+|---|---|
+| `backend/src/main/java/com/resumeai/compass` | 新输入、证据分析、复核、预算与计划跟踪 |
+| 原 `interfaces / application / domain / infrastructure / agent` | 上游接口、实体、知识库、改写、文件与模型设施 |
+| `backend/src/main/resources/db/migration` | Flyway；V1–V4 保留，V5–V9 为原三项改造，V10 新增追问与证据卡 |
+| `frontend/src/app/compass` | 输入、分析选择、预算和计划列表 |
+| `frontend/src/app/evidence-analyses/[id]` | 状态查询、证据报告、复核与失败重试 |
+| `backend/src/main/java/com/resumeai/compass/experience` | 针对要求追问、回答保存、证据卡与历史确认 |
+| `frontend/src/app/evidence-analyses/[id]/experience/[inquiryId]` | 回答、草稿预览、确认、复制/下载及重新编辑 |
+| `frontend/src/app/preparation-plans/[id]` | 草稿调整、确认、进度与事件 |
+| `frontend/src/app/applications` | 手动投递状态和备注 |
+| `frontend/src/lib/api/compass.ts` | 新前后端请求和类型约定 |
+| `deploy / scripts / .run` | 基础服务编排、本机启动和 IDEA 配置 |
+| `samples / docs` | 虚构评估输入、结果、使用与维护文档 |
 
-Owns transport concerns only:
+新模块复用 Spring JDBC、已有事务管理器、文档解析和对象存储；没有为二改重写原 JPA 分层。原删除接口加入窄范围保护，避免删除已被新业务引用的资料。
 
-- REST controllers
-- SSE endpoints for streaming analysis and rewrite progress
-- Validation of request DTOs
-- OpenAPI annotations
-- Error response mapping
+## 3. 分析执行与证据边界
 
-### Application Layer
+`SnapshotService` 保存正文、SHA-256 和分段，锁定父简历串行分配版本号。分析绑定固定版本，岗位快照写入 `analysis_run`；失败重试继续使用原资料。
 
-Coordinates use cases:
+`EvidenceService` 保存运行后将任务提交到 2 线程、8 等待名额的本机队列。队列满保留失败记录并返回 429。前端轮询报告；启动时将遗留运行标记为 `FAILED / INTERRUPTED`，没有持久化自动调度。
 
-- Upload resume
-- Parse resume
-- Upload job description
-- Analyze resume-to-job match
-- Generate suggestions
-- Rewrite selected sections
-- Export optimized resume
-- Manage knowledge base documents
+`SpringAiEvidenceModel` 先提取 1–20 条 JD 要求，再逐条核对简历。每阶段最多两次尝试，每次创建独立的 `JobCompassReadTools`，只能读当前 ID 范围且最多四次访问。工具没有写数据库或投递能力。
 
-### Domain Layer
+`EvidenceValidator` 检查字段、状态、要求 ID、段落 ID 和逐字引用。缺少经历记录默认不确定；明确缺口规则偏保守，引用校验不保证理解完全正确。人工复核独立保存，原模型判断保留。提示词与校验配合约束正文指令，但不是完整安全认证体系。
 
-Contains project vocabulary:
+## 4. 经历追问与证据卡
 
-- `Resume`
-- `ResumeSection`
-- `JobDescription`
-- `JobRequirement`
-- `MatchReport`
-- `Suggestion`
-- `RewriteDraft`
-- `KnowledgeDocument`
+报告入口选择一项要求，`ExperienceService` 绑定原报告、要求和简历版本；每条要求仅有一个追问会话。`SpringAiExperienceModel` 用已固定资料生成三个问题，`ExperienceValidator` 校验数量、类别和字段。模型只生成问题，回答原文由 Java 组织为卡，完整保留否认、限制和不确定，避免生成摘要时反转原意。
 
-Domain objects should not depend on Spring AI or persistence classes.
+追问使用独立 1 线程、4 等待名额；模型网络调用不占数据库事务，每次最多两次尝试。问题完成和回答变更带版本条件；队列拒绝及重启中断保存失败状态。确认在短事务中锁住会话，原子写入确认卡、状态与事件；重复确认幂等。
 
-### Infrastructure Layer
+`experience_inquiry` 保存当前问题、回答和草稿；`experience_evidence_card` 保存不可变确认快照。重新编辑产生新草稿，旧确认卡保留。来源明确为用户补充/用户确认，不写入旧简历或模型报告，不自动设置复核为 MATCH。现有模型和计划模块保持原行为。
 
-Implements external capabilities:
+## 5. 计划与一致性
 
-- PostgreSQL persistence
-- PGvector vector search
-- MinIO file storage
-- Redis cache and future ReBloom dedupe
-- Apache Tika/PDFBox/docx4j parsing
-- LLM provider configuration
-- PDF/DOCX export
+`BudgetPlanner` 使用受控技能映射；相同技能和行动类型合并，未知要求保持独立。每岗位取最高要求权重并跨岗位累加，用收益/预计小时排序，在预算内贪心选择，非全局最优。
 
-### Agent Layer
+`PlanningService` 将草稿、任务、来源与复核快照写入数据库。确认时用短事务、计划行锁、确认键和内容哈希，并通过岗位唯一约束创建或复用申请。进度和备注采用显式版本检查，不是新 JPA `@Version`。
 
-Owns AI-specific logic:
+模型调用在持久化结果的短事务之外。事件与对应状态变更在同一事务中保存；网络调用不占着确认事务等待。
 
-- Prompt templates
-- Spring AI `ChatClient`
-- RAG advisors
-- Tool calling
-- Structured output conversion
-- LLM evaluation and retry policy
+## 6. 数据归属
 
-## Core Workflow
+| 表或存储 | 内容 |
+|---|---|
+| `resumes / job_descriptions` | 上游父记录及新增岗位信息 |
+| `resume_version` | 不可变简历版本、正文、分段与哈希 |
+| `analysis_run / analysis_requirement` | 快照、运行状态、要求和判断 |
+| `requirement_review` | 人工复核、备注、技能修正、版本 |
+| `preparation_plan / plan_analysis / plan_task / task_requirement` | 草稿、来源、预算任务及要求关联 |
+| `job_application / activity_event` | 手动申请记录、变更历史 |
+| `experience_inquiry / experience_evidence_card` | V10：追问会话与不可变用户确认卡 |
+| `knowledge_documents / vector_store` | 上游知识文档与向量检索 |
+| Silo / MinIO API | 原文件及原流程导出文件 |
+| Redis | 上游保留基础能力；新分析进度和队列不存这里 |
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant F as Frontend
-  participant B as Spring Boot API
-  participant P as Parser
-  participant A as Agent
-  participant V as PGvector
-  participant L as LLM
+新版本简历及已有分析/申请引用的岗位受删除保护。当前没有归档入口和完整删除管理流程。
 
-  U->>F: Upload resume and paste JD
-  F->>B: POST /api/resumes
-  B->>P: Extract text and layout hints
-  P-->>B: Markdown/plain text
-  B->>A: Structure resume
-  A->>L: JSON extraction prompt
-  L-->>A: Resume JSON
-  F->>B: POST /api/jobs
-  B->>A: Structure JD
-  A->>L: Requirement extraction prompt
-  L-->>A: JobRequirement JSON
-  F->>B: POST /api/analyses
-  B->>V: Retrieve role and resume optimization guidance
-  V-->>B: Relevant chunks
-  B->>A: Analyze match with retrieved context
-  A->>L: Match and suggestion prompt
-  L-->>A: Match report
-  B-->>F: Score, gaps, suggestions
-```
+## 7. 运行与扩展范围
 
-## RAG Design
+Compose 只运行 PostgreSQL + pgvector、Redis 和 Silo；后端在 IDEA/Maven/Java 运行，前端在 Node 运行。本机默认端口 5432、6379、9000/9001、8080、3000。
 
-RAG should strengthen resume improvement quality instead of existing just to satisfy a requirement.
+当前为单用户、单实例范围，没有 SSE 新进度流、动态 Provider、认证、自动投递或云端发布。需要这些能力时从 [实施计划](实施计划.md) 新增任务，并同步接口、手册和验收。
 
-Recommended knowledge sources:
+原知识检索遇到异常或没有召回时会尝试文本检索；索引依然需要向量模型。知识建议与个人能力证据不能混用。
 
-- Resume writing rules: STAR method, quantified achievements, ATS guidelines
-- Role libraries: common requirements for Java, frontend, data, AI, product roles
-- Company or industry notes: optional future source
-- User resume history: optional future source for style consistency
-
-Recommended vector table:
-
-```text
-document_chunks
-  id
-  document_id
-  document_type
-  source_type
-  source_id
-  title
-  content
-  metadata_json
-  embedding vector
-  created_at
-```
-
-Suggested `document_type` values:
-
-- `RESUME`
-- `JOB_DESCRIPTION`
-- `RESUME_GUIDE`
-- `ROLE_GUIDE`
-- `COMPANY_PROFILE`
-- `OPTIMIZATION_RULE`
-
-## Agent and Tool Design
-
-Start with one orchestrating agent and multiple tools. This keeps behavior observable and easier to debug than a premature multi-agent system.
-
-Initial agent:
-
-- `ResumeOptimizationAgent`
-
-Initial tools:
-
-- `parseResumeTool`
-- `parseJobDescriptionTool`
-- `retrieveResumeGuideTool`
-- `calculateMatchScoreTool`
-- `rewriteExperienceBulletTool`
-- `verifyRewriteFaithfulnessTool`
-- `generateExportFileTool`
-
-Future specialized agents:
-
-- Parser Agent
-- Match Agent
-- Resume Coach Agent
-- Rewrite Agent
-- Verifier Agent
-
-## Data Flow Boundaries
-
-Store raw files in MinIO. Store structured business entities in PostgreSQL. Store embeddings in PostgreSQL PGvector. Use Redis for short-lived status/progress and future Bloom-filter dedupe where repeated indexing or duplicate uploads need cheap membership checks.
-
-Do not store provider API keys in plaintext. Prefer environment variables for local development and encrypted storage for user-provided provider credentials if this becomes multi-user.
-
-## Frontend Product Areas
-
-Recommended pages:
-
-- Dashboard: recent resumes, analyses, drafts
-- Upload: resume upload and JD input
-- Analysis: score, gaps, keywords, evidence mapping
-- Rewrite Studio: side-by-side original and generated sections
-- Resume Builder: structured resume editor and preview
-- Knowledge Base: upload or manage RAG guidance documents
-- Settings: model provider, local/cloud LLM options
-
-## Non-Goals for MVP
-
-- Full enterprise recruitment ATS
-- Multi-tenant billing
-- Browser plugin automation
-- Fully autonomous job application submission
-- Complex multi-agent framework before a single-agent tool workflow works well
+原改写复用 `rewrite_drafts.conversation_history` 保存对话与候选快照；生成时只记录候选，不覆盖已应用正文。接受最新候选时，正文、理由、校验信息及候选处理状态在同一事务中保存，导出读取已持久化草稿。2026-10-14 的局部修复没有新增数据库表、迁移或前端请求字段。原改写的模型调用仍在其既有事务方法内，未改成新证据模块的任务队列结构。

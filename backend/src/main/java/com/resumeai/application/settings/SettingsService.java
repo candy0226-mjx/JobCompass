@@ -55,9 +55,13 @@ public class SettingsService {
                 environment.getProperty("spring.ai.model.chat", "unknown"),
                 environment.getProperty("spring.ai.model.embedding", "unknown"),
                 environment.getProperty("spring.ai.openai.base-url", ""),
+                environment.getProperty("spring.ai.openai.chat.base-url", ""),
+                environment.getProperty("spring.ai.openai.embedding.base-url", ""),
                 environment.getProperty("spring.ai.openai.chat.options.model", ""),
                 environment.getProperty("spring.ai.openai.embedding.options.model", ""),
                 hasText(environment.getProperty("spring.ai.openai.api-key")),
+                hasText(environment.getProperty("spring.ai.openai.chat.api-key")),
+                hasText(environment.getProperty("spring.ai.openai.embedding.api-key")),
                 environment.getProperty("spring.ai.ollama.base-url", ""),
                 environment.getProperty("spring.ai.ollama.chat.model", ""),
                 environment.getProperty("spring.ai.ollama.embedding.model", "")
