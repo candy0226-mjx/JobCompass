@@ -54,9 +54,9 @@ Flyway 创建表和 PostgreSQL 扩展。切换远程数据库需要网络可达�
 | `RAG_EMBEDDING_DIMENSIONS` | 当前数据库向量维度为 `1024`，需与返回结果一致 |
 | `NEXT_PUBLIC_API_BASE_URL` | 前端可访问的后端地址，默认 `http://localhost:8080/api/v1` |
 
-README提供DeepSeek聊天、百炼向量的配置示例。请按自己的服务商账号、地域和可用模型填写 `.env`，不要假设克隆后已有可用Key；历史评估使用的模型名不是未来必须固定使用的模型。
+README提供DeepSeek聊天、阿里云百炼向量的配置示例。请按自己的服务商账号、地域和可用模型填写 `.env`，不要假设克隆后已有可用Key；历史评估使用的模型名不是未来必须固定使用的模型。
 
-DeepSeek 聊天 Key 不能代替百炼向量 Key。百炼这里需要模型服务 API Key，不是阿里云 AccessKey ID/Secret。同名变量只保留一个有效配置；切换模型后重启后端。前端 `NEXT_PUBLIC_*` 不存任何密钥，生产构建改变 API 地址后需要重新构建。
+DeepSeek 聊天 Key 不能代替阿里云百炼向量 Key。阿里云百炼需要使用模型服务 API Key，不是阿里云 AccessKey ID/Secret。同名变量只保留一个有效配置；切换模型后重启后端。前端 `NEXT_PUBLIC_*` 不存任何密钥，生产构建改变 API 地址后需要重新构建。
 
 新证据分析实现见 `SpringAiEvidenceModel.java`，当前针对 OpenAI 兼容聊天能力及 Tool Calling 编写。切换供应商时需验证工具调用和结构化输出；Ollama 属于上游保留选项，新业务没有逐一验证所有模型的兼容性。
 

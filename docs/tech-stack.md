@@ -8,7 +8,7 @@
 |---|---|---|
 | Java / Spring Boot | Java 21、Boot 4.1.0 | 业务接口、依赖注入、事务与健康检查 |
 | Spring AI | 2.0.0 | ChatClient、Tool Calling、结构化输出及上游 VectorStore |
-| DeepSeek / 百炼 | 根私有配置选择 | 当前方案分别承担聊天与向量化；切换前验证能力 |
+| DeepSeek / 阿里云百炼 | 项目根目录私有配置选择 | 当前方案分别承担聊天与向量化；切换前验证能力 |
 | Spring Data JPA | Boot 管理依赖 | 上游实体和业务持久化 |
 | JdbcTemplate / TransactionTemplate | Spring 既有依赖 | 新快照、报告、计划、事件和显式版本检查 |
 | PostgreSQL / pgvector | 部署镜像 `pgvector/pgvector:pg17` | 关系数据与上游向量检索 |

@@ -19,7 +19,7 @@
 | JDK 21、Maven 3.9+ | 在 IDEA 或命令行运行后端 |
 | Node.js 20.9+，满足当前 Next.js 16 要求 | 运行前端；具体版本以当前依赖要求为准 |
 | Docker Desktop，使用 Linux 容器 | 启动 PostgreSQL 17 + pgvector、Redis、Silo 文件存储 |
-| 聊天模型 Key、向量模型 Key | DeepSeek 用于分析；百炼向量模型用于原项目知识库索引与检索 |
+| 聊天模型 Key、向量模型 Key | DeepSeek 用于分析；阿里云百炼向量模型用于原项目知识库索引与检索 |
 
 使用当前 Docker 配置时，不需要在 Windows 上另外安装 PostgreSQL。数据库仍在你的电脑上运行，只是运行在容器里。
 

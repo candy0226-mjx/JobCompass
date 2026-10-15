@@ -31,7 +31,7 @@
 ## 技术栈
 
 - 后端：Java 21、Spring Boot 4.1、Spring AI 2.0、Spring Data JPA、Flyway
-- AI：OpenAI 兼容接口、DeepSeek 聊天模型、阿里云 DashScope 向量模型、Ollama 本地模型可选
+- AI：OpenAI 兼容接口、DeepSeek 聊天模型、阿里云百炼（DashScope）向量模型、Ollama 本地模型可选
 - 数据：PostgreSQL 17、PGvector、Redis 8、Silo（兼容 MinIO API）
 - 文档解析：Apache Tika、PDFBox、docx4j
 - 前端：Next.js 16、React 19、TypeScript、Tailwind CSS
@@ -99,7 +99,11 @@ REDIS_PASSWORD=
 
 ### DeepSeek 聊天 + 阿里云百炼向量
 
-两家服务使用不同的 API Key 和地址。先在 [阿里云百炼控制台](https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key) 选择华北 2（北京）地域并创建 Key。然后在本地 `.env` 中替换已有的模型选择，并填写：
+两家服务使用不同的 API Key 和地址，按以下步骤配置：
+
+1. 打开 **阿里云百炼控制台**，进入 [API Key 管理页面](https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key)。
+2. 选择 **华北 2（北京）** 地域，创建自己的阿里云百炼 API Key。
+3. 在项目根目录的本地 `.env` 中替换已有的模型选择，并填写以下配置：
 
 ```env
 RESUME_AI_LLM_PROVIDER=deepseek
@@ -108,15 +112,15 @@ SPRING_AI_EMBEDDING_MODEL=openai
 OPENAI_CHAT_API_KEY=<你的 DeepSeek Key>
 OPENAI_CHAT_BASE_URL=https://api.deepseek.com
 OPENAI_CHAT_MODEL=deepseek-flash
-OPENAI_EMBEDDING_API_KEY=<你的百炼 Key>
+OPENAI_EMBEDDING_API_KEY=<你的阿里云百炼 Key>
 OPENAI_EMBEDDING_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 OPENAI_EMBEDDING_MODEL=text-embedding-v4
 RAG_EMBEDDING_DIMENSIONS=1024
 ```
 
-同名变量在 `.env` 中只保留一行；不要让原来的 `SPRING_AI_CHAT_MODEL=ollama`、`SPRING_AI_EMBEDDING_MODEL=ollama` 或示例模型名与新配置并存。上面的百炼地址适用于华北 2（北京）；其他地域需使用控制台给出的对应地址。项目的密钥只保存在被 Git 忽略的本地 `.env` 中，不要把密钥发到聊天或提交到仓库。Docker Compose 只启动 PostgreSQL、Redis 和对象存储；使用云端模型时无需启动 Ollama。
+同名变量在 `.env` 中只保留一行；不要让原来的 `SPRING_AI_CHAT_MODEL=ollama`、`SPRING_AI_EMBEDDING_MODEL=ollama` 或示例模型名与新配置并存。上面的阿里云百炼地址适用于华北 2（北京）；其他地域需使用控制台给出的对应地址。项目的密钥只保存在被 Git 忽略的本地 `.env` 中，不要把密钥发到聊天或提交到仓库。Docker Compose 只启动 PostgreSQL、Redis 和对象存储；使用云端模型时无需启动 Ollama。
 
-`OPENAI_EMBEDDING_API_KEY` 必须填写百炼控制台“API Key”页面创建的模型服务密钥，不能填写阿里云 AccessKey ID（通常以 `LTAI` 开头）或 AccessKey Secret；后者会使向量接口返回 401。
+`OPENAI_EMBEDDING_API_KEY` 必须填写阿里云百炼控制台“API Key”页面创建的模型服务密钥，不能填写阿里云 AccessKey ID（通常以 `LTAI` 开头）或 AccessKey Secret；后者会使向量接口返回 401。
 
 如果使用远程数据库且库里已有对象，可以开启 Flyway baseline：
 
