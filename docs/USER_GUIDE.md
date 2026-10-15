@@ -1,6 +1,6 @@
 # 求职罗盘用户使用手册
 
-最后核对：2026-10-14。页面和操作变化后直接更新本文件。
+最后核对：2026-10-15。页面和操作变化后直接更新本文件。
 
 当前界面为「方案 A · 简洁浅色」：白色卡片、浅灰背景、青绿色导航与深色主要按钮，原有路由和操作保留。求职罗盘顶部的四步提示只是流程说明，不表示分析或计划已经完成；状态仍以实际记录为准。窄屏自动换行导航，并将双列表单改为单列。
 
@@ -23,7 +23,9 @@
 
 使用当前 Docker 配置时，不需要在 Windows 上另外安装 PostgreSQL。数据库仍在你的电脑上运行，只是运行在容器里。
 
-所有命令默认在项目根目录运行，本机为 `E:\agentProject\JobCompass`。
+先将仓库克隆或下载到自己选择的本地文件夹，并在终端进入该目录；获取命令见 [README](../README.md)。所有命令默认在项目根目录运行，即同时包含 `backend/`、`frontend/`、`deploy/` 和 `.env.example` 的目录，不要求固定盘符或文件夹名称。克隆不包含私有 `.env`、数据库数据及维护者的演示记录。
+
+本文命令示例使用Windows PowerShell。其他系统可按README的Maven/npm命令启动应用，安装路径与工具版本按自己的环境设置。
 
 ### 配置文件
 
@@ -52,7 +54,7 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.local.yml p
 
 ### 第二步：启动后端
 
-IDEA：导入 `backend/pom.xml`，选择 JDK 21，运行仓库的 `JobCompass Backend` 配置；模块名不匹配时选择实际 Maven 模块。也可以运行 `com.resumeai.ResumeAiAgentApplication`，工作目录设为 `backend`，自动读取 `../.env`。
+IDEA：打开自己克隆的项目根目录，导入 `backend/pom.xml`，选择 JDK 21，运行仓库的 `JobCompass Backend` 配置；该配置的工作目录为 `$PROJECT_DIR$/backend`，模块名不匹配时选择实际 Maven 模块。也可以运行 `com.resumeai.ResumeAiAgentApplication`，工作目录设为本次克隆目录下的 `backend/`，自动读取项目根目录的 `../.env`。
 
 命令行方式，在一个终端运行：
 

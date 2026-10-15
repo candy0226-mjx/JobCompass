@@ -36,16 +36,27 @@ if (-not $env:SPRING_DOCKER_COMPOSE_ENABLED) {
 Push-Location $repoRoot
 try {
   $maven = Get-Command mvn -ErrorAction SilentlyContinue
-  if ($maven) {
-    & $maven.Source -f backend/pom.xml spring-boot:run
-  }
-  else {
-    $wrapper = Get-ChildItem -Path (Join-Path $HOME '.m2\wrapper\dists\apache-maven-3.9.16-bin\*\apache-maven-3.9.16\bin\mvn.cmd') -ErrorAction SilentlyContinue | Select-Object -First 1
-    if (-not $wrapper) {
-      throw 'Maven was not found. Install Maven 3.9+ or add mvn to PATH.'
+  $mavenPath = if ($maven) { $maven.Source } else { $null }
+  if (-not $mavenPath) {
+    foreach ($mavenHome in @($env:MAVEN_HOME, $env:M2_HOME)) {
+      if (-not [string]::IsNullOrWhiteSpace($mavenHome)) {
+        $candidate = Join-Path $mavenHome 'bin\mvn.cmd'
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+          $mavenPath = $candidate
+          break
+        }
+      }
     }
-    & $wrapper.FullName -f backend/pom.xml spring-boot:run
   }
+  if (-not $mavenPath) {
+    $wrapper = Get-ChildItem -Path (Join-Path $HOME '.m2\wrapper\dists\apache-maven-3.9.*-bin\*\apache-maven-3.9.*\bin\mvn.cmd') -File -ErrorAction SilentlyContinue |
+      Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($wrapper) { $mavenPath = $wrapper.FullName }
+  }
+  if (-not $mavenPath) {
+    throw 'Maven was not found. Install Maven 3.9+ and add mvn to PATH, or set MAVEN_HOME/M2_HOME to its installation directory.'
+  }
+  & $mavenPath -f backend/pom.xml spring-boot:run
 }
 finally {
   Pop-Location

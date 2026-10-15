@@ -15,7 +15,7 @@
 3. 按实际风险验证变更，将结果、未验证内容和遗留问题写入 [验收记录](docs/验收记录.md)。
 4. 同步使用手册、接口或架构中的受影响章节，再更新计划状态。
 
-本机完整蓝图位于 `E:\agentProject\求职罗盘-开发文档.md`，需更新总体设计时编辑原文件。本仓库的实施计划只跟踪工作，不另建完整蓝图。
+公共设计与维护依据以仓库内 `docs/` 为准，克隆到任意本地目录后都可阅读。若维护者另外提供仓库外蓝图，按实际位置与权限编辑原文件；不要求所有协作者拥有该文件，也不在公共命令中写入个人电脑路径。
 
 ## 可用验证命令
 
@@ -87,7 +87,7 @@ try {
 
 需要远程协作时自行 Fork 或添加自己的 remote；不要将 `upstream` 当成自己的写入仓库。
 
-本机 `origin` 为 `https://github.com/candy0226-mjx/JobCompass.git`，本地 `jobcompass-dev` 跟踪 `origin/main`。后续修改并验证后，检查差异、选择本次相关文件提交，再推送：
+先用 `git remote -v` 和 `git branch -vv` 核对当前克隆的远端、分支与写权限。直接克隆本项目时，`origin`默认指向本项目；需要独立二改且没有写权限时，先Fork，再克隆自己的Fork。分支名按当前工作选择，不依赖维护者曾使用的本地分支名。修改并验证后，选择本次相关文件提交，再推送到自己有权限的远端分支：
 
 ```powershell
 git status
@@ -95,10 +95,10 @@ git diff
 git add <本次相关文件>
 git diff --cached
 git commit -m "feat: 描述本次改动"
-git push origin HEAD:main
+git push -u origin HEAD
 ```
 
-其他电脑克隆自有仓库后默认使用 `main`；本机保留当前分支名称。初始化上传包含代码、虚构样例和文档，不包含本机数据库、对象存储数据、私有配置或构建产物。公开示例配置需要使用者自行填写。
+首次克隆会检出远端默认分支；需要功能分支时自行创建。公开仓库包含代码、虚构样例和文档，不包含开发者数据库、对象存储数据、私有配置或构建产物。使用者需填写自己的配置、启动基础服务，并通过页面或接口录入资料；历史验收报告中的资源ID不会自动出现在新数据库里。
 
 ### 前端版本与回退
 
@@ -109,7 +109,7 @@ git push origin HEAD:main
 ```powershell
 git log --oneline --grep="feat: add minimal light frontend theme"
 git revert <上面查到的主题提交ID>
-git push origin HEAD:main
+git push
 ```
 
 撤销后重新运行 `npm run build` 并重启前端即可生效。若后续提交也修改了相同样式，可能需要处理冲突；不要用整个仓库的强制重置来撤销局部主题。

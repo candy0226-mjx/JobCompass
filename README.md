@@ -1,6 +1,6 @@
 # 求职罗盘 JobCompass
 
-> 自有仓库：[candy0226-mjx/JobCompass](https://github.com/candy0226-mjx/JobCompass)。二次开发基线：[Mr12138666/Resume-Ai-Agent](https://github.com/Mr12138666/Resume-Ai-Agent)。保留原 Git 历史与 MIT `LICENSE`；本机使用 `jobcompass-dev` 分支，对应自有仓库 `main`，`origin` 指向 JobCompass，`upstream` 指向原仓库。JobCompass 新增证据核对、多岗位预算计划、确认跟踪与经历追问；唯一维护蓝图为 `E:\agentProject\求职罗盘-开发文档.md`。
+> 项目仓库：[candy0226-mjx/JobCompass](https://github.com/candy0226-mjx/JobCompass)。二次开发基线：[Mr12138666/Resume-Ai-Agent](https://github.com/Mr12138666/Resume-Ai-Agent)。保留原 Git 历史与 MIT `LICENSE`。JobCompass 新增证据核对、多岗位预算计划、确认跟踪与经历追问；使用、架构与开发资料均从仓库内的 `docs/` 阅读，不依赖维护者的本地目录或仓库外蓝图。
 
 面向求职者的岗位分析与准备规划系统：固定一版简历，核对最多三个目标岗位的真实要求和经历证据，再汇总共同任务，在每周时间预算内确认并追踪准备计划。
 
@@ -129,12 +129,23 @@ FLYWAY_BASELINE_VERSION=0
 
 ## 启动项目
 
+### 获取项目到本地
+
+先选择自己的本地工作目录，在该目录打开终端并执行：
+
+```shell
+git clone https://github.com/candy0226-mjx/JobCompass.git
+cd JobCompass
+```
+
+也可以克隆自己的Fork，或在克隆命令末尾指定其他目录名。后文的“项目根目录”指包含 `backend/`、`frontend/` 和本README的克隆目录，与盘符、用户名和文件夹名称无关。首次运行先按上面的配置说明，从 `.env.example` 创建并填写自己的 `.env`；克隆不会带来维护者的密钥、数据库或演示记录。
+
 ### 在 IDEA 中运行 Java 后端
 
-1. 用 IDEA 打开 `E:\agentProject\JobCompass`，把 `backend/pom.xml` 添加为 Maven 工程，选择 JDK 21。
+1. 将项目拉取到自己的本地文件夹，用 IDEA 打开该项目根目录，把 `backend/pom.xml` 添加为 Maven 工程，选择 JDK 21。
 2. 在项目根目录运行下面的 Docker Compose 命令，启动数据库、Redis 和文件存储。业务代码直接在本机运行。
-3. 运行仓库内的 `JobCompass Backend` 配置；若 IDEA 的模块名不同，选择 `resume-ai-backend` 对应模块。也可直接运行 `com.resumeai.ResumeAiAgentApplication`，工作目录设置为 `E:\agentProject\JobCompass\backend`。
-4. Spring Boot 自动读取 `../.env`，使用已填的私有配置，不需要把 Key 写进 IDEA 配置。
+3. 运行仓库内的 `JobCompass Backend` 配置；它使用 `$PROJECT_DIR$/backend` 作为工作目录。若 IDEA 的模块名不同，选择 `backend/pom.xml` 对应的实际模块。也可直接运行 `com.resumeai.ResumeAiAgentApplication`，工作目录设置为自己克隆目录下的 `backend/`。
+4. 工作目录为 `backend/` 时，Spring Boot 读取项目根目录的 `../.env`。请先创建并填写自己的配置，不需要把 Key 写进 IDEA 配置。
 5. 在另一个终端运行前端启动脚本，打开 `http://localhost:3000/compass`。
 
 本机已有后端或前端进程运行时，先停止对应进程，再切换到 IDEA 或另一个启动方式，避免重复占用 8080/3000 端口。
@@ -160,6 +171,8 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.local.yml u
 ```
 
 首次缺少 `frontend/node_modules` 时，前端脚本会自动安装依赖；已有依赖时复用，不重复安装。Docker 命令找不到或引擎未启动时，按[故障排查](docs/故障排查.md)检查。
+
+上面的 `.ps1` 命令用于Windows PowerShell。后端脚本基于脚本所在目录定位项目，并依次查找PATH、`MAVEN_HOME`/`M2_HOME`及当前用户的Maven 3.9缓存；不需要特定用户或固定Maven补丁版本。其他系统，或不使用脚本时，可在项目根目录的一个终端运行 `mvn -f backend/pom.xml spring-boot:run`；在另一个终端先运行 `npm --prefix frontend install`，再运行 `npm --prefix frontend run dev`。JDK、Maven、Node与Docker须由使用者安装并配置好。
 
 浏览器打开：
 
