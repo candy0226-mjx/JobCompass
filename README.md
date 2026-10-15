@@ -99,7 +99,7 @@ REDIS_PASSWORD=
 
 ### DeepSeek 聊天 + 阿里云百炼向量
 
-两家服务使用不同的 API Key 和地址。先在[阿里云百炼控制台](https://help.aliyun.com/zh/model-studio/get-api-key)选择华北 2（北京）地域并创建 Key。然后在本地 `.env` 中替换已有的模型选择，并填写：
+两家服务使用不同的 API Key 和地址。先在 [阿里云百炼控制台](https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key) 选择华北 2（北京）地域并创建 Key。然后在本地 `.env` 中替换已有的模型选择，并填写：
 
 ```env
 RESUME_AI_LLM_PROVIDER=deepseek
