@@ -101,7 +101,7 @@ REDIS_PASSWORD=
 
 两家服务使用不同的 API Key 和地址，按以下步骤配置：
 
-1. 打开 **阿里云百炼控制台**，进入 [API Key 管理页面](https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key)。
+1. 打开 [**阿里云百炼控制台**](https://bailian.console.aliyun.com/)，进入 [API Key 管理页面](https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key)。
 2. 选择 **华北 2（北京）** 地域，创建自己的阿里云百炼 API Key。
 3. 在项目根目录的本地 `.env` 中替换已有的模型选择，并填写以下配置：
 
