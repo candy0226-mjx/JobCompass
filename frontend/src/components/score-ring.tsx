@@ -1,10 +1,10 @@
 import { scoreTone } from "@/lib/format";
 
 const toneMap = {
-  excellent: { stroke: "#15803d", bg: "#f0f0e8", label: "强匹配" },
-  good: { stroke: "#1d4ed8", bg: "#f0f0e8", label: "可投递" },
-  warning: { stroke: "#f97316", bg: "#f0f0e8", label: "需优化" },
-  risk: { stroke: "#dc2626", bg: "#f0f0e8", label: "风险高" },
+  excellent: { stroke: "#15803d", bg: "#f0f0e8", label: "字面覆盖较高" },
+  good: { stroke: "#1d4ed8", bg: "#f0f0e8", label: "检查经历依据" },
+  warning: { stroke: "#f97316", bg: "#f0f0e8", label: "部分表达待核实" },
+  risk: { stroke: "#dc2626", bg: "#f0f0e8", label: "较多表达待核实" },
 };
 
 export function ScoreRing({
@@ -55,7 +55,7 @@ export function ScoreRing({
       <div>
         <p className="font-mono text-xs font-bold uppercase tracking-wide text-[#1d4ed8]">{label}</p>
         <p className="mt-2 font-serif text-2xl font-semibold">{tone.label}</p>
-        <p className="mt-2 max-w-44 font-mono text-xs leading-5 text-[#6b7280]">结合关键词覆盖、语义相关性与 ATS 可读性评估。</p>
+        <p className="mt-2 max-w-44 font-mono text-xs leading-5 text-[#6b7280]">关键词及规则估算；不代表能力、投递资格或录用概率。</p>
       </div>
     </div>
   );

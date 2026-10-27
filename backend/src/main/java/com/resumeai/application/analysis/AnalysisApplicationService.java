@@ -54,16 +54,19 @@ public class AnalysisApplicationService {
                         .map(result -> result.title() + ": " + result.content())
                         .toList()
                 : List.<String>of();
-        var semanticScore = Math.min(100, Math.round(keywordScore * 0.75f + coverageBonus(resume.getRawText())));
-        var atsScore = Math.min(100, Math.round(keywordScore * 0.65f + 25));
-        var overallScore = Math.round(keywordScore * 0.5f + semanticScore * 0.3f + atsScore * 0.2f);
+        // V2 has one transparent literal-coverage score. Deprecated API fields are aliases,
+        // not additional measurements. Historical rows retain their original V1 formula values.
+        var semanticScore = keywordScore;
+        var atsScore = keywordScore;
+        var overallScore = keywordScore;
         var report = new AnalysisReport(
                 match.keywords(),
                 match.matched(),
                 match.missing(),
                 suggestions(match.missing(), keywordScore, guidance),
                 guidance,
-                match.evidence()
+                match.evidence(),
+                match.details()
         );
 
         var analysis = new Analysis(
@@ -105,20 +108,6 @@ public class AnalysisApplicationService {
             return 0;
         }
         return Math.round((matched * 100f) / total);
-    }
-
-    private int coverageBonus(String resumeText) {
-        var length = resumeText == null ? 0 : resumeText.length();
-        if (length > 2000) {
-            return 20;
-        }
-        if (length > 1000) {
-            return 15;
-        }
-        if (length > 500) {
-            return 10;
-        }
-        return 5;
     }
 
     private List<String> suggestions(List<String> missingKeywords, int keywordScore, List<String> guidance) {

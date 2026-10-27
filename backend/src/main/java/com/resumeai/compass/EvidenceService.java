@@ -18,10 +18,14 @@ public class EvidenceService {
     private final ThreadPoolExecutor workers=new ThreadPoolExecutor(2,2,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(8),
         r->{var t=new Thread(r,"compass-evidence");t.setDaemon(true);return t;},new ThreadPoolExecutor.AbortPolicy());
     public record Run(UUID id,String status,UUID resumeVersionId,Snapshots.Job job,Evidence.Report report,
-                      List<Evidence.SavedReview> reviews,String errorCode,Long durationMs,int toolCalls,OffsetDateTime createdAt,AnalysisMetrics.Snapshot metrics) {
+                      List<Evidence.SavedReview> reviews,String errorCode,Long durationMs,int toolCalls,OffsetDateTime createdAt,AnalysisMetrics.Snapshot metrics,EvidenceScoring.Snapshot score) {
+        public Run(UUID id,String status,UUID versionId,Snapshots.Job job,Evidence.Report report,List<Evidence.SavedReview> reviews,
+                   String errorCode,Long durationMs,int toolCalls,OffsetDateTime createdAt,AnalysisMetrics.Snapshot metrics) {
+            this(id,status,versionId,job,report,reviews,errorCode,durationMs,toolCalls,createdAt,metrics,null);
+        }
         public Run(UUID id,String status,UUID versionId,Snapshots.Job job,Evidence.Report report,List<Evidence.SavedReview> reviews,
                    String errorCode,Long durationMs,int toolCalls,OffsetDateTime createdAt) {
-            this(id,status,versionId,job,report,reviews,errorCode,durationMs,toolCalls,createdAt,null);
+            this(id,status,versionId,job,report,reviews,errorCode,durationMs,toolCalls,createdAt,null,null);
         }
     }
     public EvidenceService(JdbcTemplate db,CompassJson json,SnapshotService snapshots,EvidenceModel model,PlatformTransactionManager manager,Environment env) {
@@ -38,7 +42,7 @@ public class EvidenceService {
     private Run enqueue(UUID versionId,Snapshots.Job job,UUID retryOf) {
         var version=snapshots.version(versionId); UUID id=UUID.randomUUID();
         Snapshots.field(job.title(),"岗位名称",200);Snapshots.field(job.company(),"公司",200);
-        tx.executeWithoutResult(s->db.update("INSERT INTO analysis_run(id,resume_version_id,job_id,job_snapshot_json,status,model_name,retry_of,prompt_version) VALUES (?,?,?,CAST(? AS jsonb),'PENDING',?,?,'evidence-v2')",
+        tx.executeWithoutResult(s->db.update("INSERT INTO analysis_run(id,resume_version_id,job_id,job_snapshot_json,status,model_name,retry_of,prompt_version) VALUES (?,?,?,CAST(? AS jsonb),'PENDING',?,?,'evidence-v3')",
             id,versionId,job.id(),json.write(job),modelName,retryOf));
         try { workers.execute(()->execute(id,version,job)); }
         catch(RejectedExecutionException e) {
@@ -57,14 +61,15 @@ public class EvidenceService {
                 if(!states.isEmpty()) history=states.getFirst();
             }
             var result=model.analyze(id,version,job,history);
+            var score=new EvidenceScoring().calculate(result.report());
             tx.executeWithoutResult(s->{
                 for(var requirement:result.report().requirements()) {
                     var assessment=result.report().assessments().stream().filter(a->a.requirementId().equals(requirement.id())).findFirst().orElseThrow();
                     db.update("INSERT INTO analysis_requirement(id,analysis_id,requirement_json,assessment_json) VALUES (?,?,CAST(? AS jsonb),CAST(? AS jsonb))",
                         requirement.id(),id,json.write(requirement),json.write(assessment));
                 }
-                db.update("UPDATE analysis_run SET status='SUCCEEDED',report_json=CAST(? AS jsonb),duration_ms=?,tool_calls=?,metrics_json=CAST(? AS jsonb),finished_at=now() WHERE id=?",
-                    json.write(result.report()),elapsed(start),result.toolCalls(),result.metrics()==null?null:json.write(result.metrics()),id);
+                db.update("UPDATE analysis_run SET status='SUCCEEDED',report_json=CAST(? AS jsonb),duration_ms=?,tool_calls=?,metrics_json=CAST(? AS jsonb),score_json=CAST(? AS jsonb),finished_at=now() WHERE id=?",
+                    json.write(result.report()),elapsed(start),result.toolCalls(),result.metrics()==null?null:json.write(result.metrics()),score==null?null:json.write(score),id);
             });
         } catch(CompassException e) { fail(id,e.code,elapsed(start),e.metrics()); }
         catch(Exception e) { fail(id,"ANALYSIS_FAILED",elapsed(start)); }
@@ -79,7 +84,8 @@ public class EvidenceService {
         var runs=db.query("SELECT * FROM analysis_run WHERE id=?",(r,n)->new Run(id,r.getString("status"),r.getObject("resume_version_id",UUID.class),
             json.read(r.getString("job_snapshot_json"),Snapshots.Job.class),r.getString("report_json")==null?null:json.read(r.getString("report_json"),Evidence.Report.class),
             reviews(id),r.getString("error_code"),r.getObject("duration_ms",Long.class),r.getInt("tool_calls"),r.getObject("created_at",OffsetDateTime.class),
-            r.getString("metrics_json")==null?null:json.read(r.getString("metrics_json"),AnalysisMetrics.Snapshot.class)),id);
+            r.getString("metrics_json")==null?null:json.read(r.getString("metrics_json"),AnalysisMetrics.Snapshot.class),
+            r.getString("score_json")==null?null:json.read(r.getString("score_json"),EvidenceScoring.Snapshot.class)),id);
         if(runs.isEmpty()) throw CompassException.missing("分析不存在");return runs.getFirst();
     }
     public List<Run> list() { return db.query("SELECT id FROM analysis_run ORDER BY created_at DESC LIMIT 100",(r,n)->r.getObject(1,UUID.class)).stream().map(this::get).toList(); }

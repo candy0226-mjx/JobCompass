@@ -7,36 +7,39 @@ export function JDResumeComparison({
   jobDescription,
   resumeText,
   keywords,
+  analysis,
 }: {
   jobDescription: string;
   resumeText: string;
   keywords: string[];
+  analysis?: AnalysisResponse | null;
 }) {
-  const matchCount = keywords.filter((keyword) => resumeText.toLowerCase().includes(keyword.toLowerCase())).length;
-  const matchRate = keywords.length > 0 ? Math.round((matchCount / keywords.length) * 100) : 0;
+  const evaluation = analysis?.report.keywordEvaluation;
+  const jobHighlights = evaluation?.terms.flatMap(t => t.jobOccurrences.map(o => o.original)) ?? keywords;
+  const resumeHighlights = evaluation?.terms.flatMap(t => t.resumeOccurrences.map(o => o.original)) ?? keywords;
 
   return (
     <section className="overflow-hidden border border-black bg-[#f0f0e8] shadow-sw-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black bg-[#e5e5e0] px-5 py-4">
         <div className="flex flex-wrap gap-3 font-mono text-xs font-bold uppercase tracking-wide">
-          <span className="border border-black bg-[#1d4ed8] px-3 py-1 text-white">JD 关键词 {keywords.length}</span>
-          <span className="border border-black bg-[#15803d] px-3 py-1 text-white">简历命中 {matchCount}</span>
+          <span className="border border-black bg-[#1d4ed8] px-3 py-1 text-white">{analysis ? `JD 关键词 ${analysis.report.extractedKeywords.length}` : "文本预览"}</span>
+          {analysis && <span className="border border-black bg-[#15803d] px-3 py-1 text-white">字面命中 {analysis.report.matchedKeywords.length}</span>}
         </div>
-        <p className="font-mono text-sm font-bold uppercase tracking-wide text-[#1d4ed8]">覆盖率 {matchRate}%</p>
+        <p className="font-mono text-sm font-bold uppercase tracking-wide text-[#1d4ed8]">{analysis ? evaluation?.available === false ? "没有可计分技术项" : `关键词覆盖 ${evaluation?.coverageScore ?? analysis.keywordScore}%（后端结果）` : "分析后显示正式覆盖率；高亮仅供预览"}</p>
       </div>
       <div className="grid min-h-[34rem] lg:grid-cols-2">
         <article className="border-b border-black lg:border-b-0 lg:border-r">
           <div className="border-b border-black bg-[#e5e5e0] px-5 py-3">
             <h3 className="font-mono text-sm font-bold uppercase tracking-wide">目标 JD</h3>
           </div>
-          <p className="whitespace-pre-wrap p-5 font-mono text-sm leading-7">{highlightText(jobDescription, keywords)}</p>
+          <p className="whitespace-pre-wrap p-5 font-mono text-sm leading-7">{highlightText(jobDescription, jobHighlights)}</p>
         </article>
         <article>
           <div className="border-b border-black bg-[#e5e5e0] px-5 py-3">
             <h3 className="font-mono text-sm font-bold uppercase tracking-wide">简历命中预览</h3>
           </div>
           <p className="whitespace-pre-wrap p-5 font-mono text-sm leading-7">
-            {resumeText ? highlightText(resumeText, keywords) : "上传简历后显示解析文本。"}
+            {resumeText ? highlightText(resumeText, resumeHighlights) : "上传简历后显示解析文本。"}
           </p>
         </article>
       </div>
@@ -45,21 +48,33 @@ export function JDResumeComparison({
 }
 
 export function AnalysisPreviewStrip({ analysis }: { analysis: AnalysisResponse }) {
+  const v2 = !!analysis.report.keywordEvaluation;
   return (
-    <section className="grid gap-3 md:grid-cols-4">
+    <section className="grid gap-3 md:grid-cols-4" aria-label="关键词规则估算">
       {[
-        ["综合", analysis.overallScore],
+        ["规则综合", analysis.overallScore],
         ["关键词", analysis.keywordScore],
-        ["语义", analysis.semanticScore],
-        ["ATS", analysis.atsScore],
+        [v2 ? "兼容语义字段（同覆盖率）" : "语义规则估算", analysis.semanticScore],
+        [v2 ? "兼容 ATS 字段（同覆盖率）" : "ATS 规则估算", analysis.atsScore],
       ].map(([label, value]) => (
         <article className="border border-black bg-[#f0f0e8] p-4 shadow-sw-sm" key={label}>
           <p className="font-mono text-xs font-bold uppercase tracking-wide text-[#1d4ed8]">{label}</p>
-          <p className="mt-2 font-mono text-4xl font-bold">{value}</p>
+          <p className="mt-2 font-mono text-4xl font-bold">{analysis.report.keywordEvaluation?.available === false ? "—" : value}</p>
         </article>
       ))}
     </section>
   );
+}
+
+export function KeywordEvaluationNotes({ analysis }: { analysis: AnalysisResponse }) {
+  const e = analysis.report.keywordEvaluation;
+  return <div className="mt-4 space-y-2 text-sm">
+    <p>算法：{e?.algorithmVersion ?? "legacy-keyword-v1"} · 关键词字面覆盖用于检查表达，不代表能力或录用概率。{e ? "规则综合等于关键词覆盖率；语义与 ATS 为兼容字段，返回相同数值，不是独立测量。" : "历史语义和 ATS 数值由旧规则公式估算。"}</p>
+    {e && <p>词典：{e.dictionaryVersion}。仅统计已识别技术项；{e.available ? "分数不包含待识别候选。" : "没有可计分技术项，无法评估。"}</p>}
+    {!!e?.unknownCandidates.length && <p>待识别候选（未计分）：{e.unknownCandidates.join("、")}</p>}
+    {!!e?.corrections.length && <p>原 JD 纠错：{e.corrections.map(o => `${o.original} → ${o.canonical}`).join("；")}。原文保留。</p>}
+    {e?.relatedCandidates.map(note => <p key={note}>{note}</p>)}
+  </div>;
 }
 
 export function RewriteDiffPreview({ rewrite }: { rewrite: RewriteDraftResponse }) {

@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, type FormEvent, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { JDResumeComparison, AnalysisPreviewStrip, RewriteDiffPreview } from "@/components/comparison-panels";
+import { JDResumeComparison, AnalysisPreviewStrip, RewriteDiffPreview, KeywordEvaluationNotes } from "@/components/comparison-panels";
 import { EvidenceMatrix, KeywordCloud } from "@/components/keyword-panels";
 import { ScoreRing } from "@/components/score-ring";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -369,6 +369,7 @@ function UploadWorkflow() {
           jobDescription={jobDescription}
           keywords={comparisonKeywords}
           resumeText={resume?.rawText ?? ""}
+          analysis={analysis}
         />
       </section>
 
@@ -382,7 +383,8 @@ function UploadWorkflow() {
               description="这一步对应参考项目里的预览检查：先看分数、缺口、证据，再决定是否生成改写。"
             />
             <div className="mt-5">
-              <ScoreRing label="综合匹配" score={analysis.overallScore} />
+              {analysis.report.keywordEvaluation?.available === false ? <p>没有可计分技术项，无法评估。</p> : <ScoreRing label="规则综合" score={analysis.overallScore} />}
+              <KeywordEvaluationNotes analysis={analysis} />
             </div>
             <div className="mt-5">
               <AnalysisPreviewStrip analysis={analysis} />
@@ -393,7 +395,7 @@ function UploadWorkflow() {
             <CardHeader
               eyebrow="关键词"
               title="关键词覆盖与缺口"
-              description="绿色是简历已有证据，红色是建议补齐或改写时强化的岗位关键词。"
+              description="绿色表示字面命中；红色表示未找到相应技术名，需要核实实际经历。"
             />
             <div className="mt-5 grid gap-5 md:grid-cols-2">
               <div>

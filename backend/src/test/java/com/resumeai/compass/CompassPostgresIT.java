@@ -38,6 +38,7 @@ class CompassPostgresIT {
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V8__compass_review_skill_override.sql")).execute(ds);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V9__compass_confirmed_review.sql")).execute(ds);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V11__analysis_metrics.sql")).execute(ds);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V12__evidence_score_snapshot.sql")).execute(ds);
         json=new CompassJson(new ObjectMapper().findAndRegisterModules()); snapshots=new SnapshotService(db,json,manager);
     }
     @AfterAll static void cleanup() {
@@ -79,6 +80,40 @@ class CompassPostgresIT {
             var a=new Evidence.Assessment(q.id(),"UNCERTAIN",List.of(),"需要复核真实项目细节","CLARIFY","核实缓存更新策略","记录项目实际策略与验证结果",30);
             return new EvidenceModel.Result(new Evidence.Report(List.of(q),List.of(a)),2);
         };
+    }
+    static EvidenceModel scoredModel() {
+        return (id,v,j,h)-> {
+            var validator=new EvidenceValidator();
+            var extraction=new Evidence.Extraction(List.of(new Evidence.RequirementDraft("Redis 基础","REQUIRED","redis",new Evidence.Reference("j1",j.segments().getFirst().text()),
+                "redis","redis-basics","SKILL","ALL",List.of())),true,List.of());
+            var requirements=validator.requirements(extraction,j);
+            var assessment=new Evidence.Assessment(requirements.getFirst().id(),"MATCH",List.of(new Evidence.Reference("r99",v.segments().getFirst().text())),"项目已使用 Redis","NONE",null,null,0);
+            return new EvidenceModel.Result(validator.structuredReport(extraction,requirements,new Evidence.Assessments(List.of(assessment)),v,j),2);
+        };
+    }
+    @Test void scoreSnapshotPersistsAndReviewsCannotChangeOriginalScore() throws Exception {
+        var v=snapshots.createText("评分持久化","项目使用 Redis");var j=snapshots.createJob("评分实习","评分公司","需要 Redis 基础",null,null,null);var service=service(scoredModel());
+        try {
+            var run=await(service,service.submit(v.id(),j.id(),null).id());
+            assertThat(run.status()).isEqualTo("SUCCEEDED");assertThat(run.score().coverageScore()).isEqualTo(100);
+            assertThat(run.report().referenceAdjustments()).hasSize(1);
+            assertThat(run.report().assessments().getFirst().resumeEvidence().getFirst().segmentId()).isEqualTo("r1");
+            var original=run.score();
+            var reviewed=service.review(run.id(),List.of(new Evidence.Review(run.report().requirements().getFirst().id(),"LEARN","希望补充实践",0)));
+            assertThat(reviewed.score()).isEqualTo(original);
+            var another=service(scoredModel());try {assertThat(another.get(run.id()).score()).isEqualTo(original);} finally {another.close();}
+            assertThat(db.queryForObject("SELECT score_json->>'algorithmVersion' FROM analysis_run WHERE id=?",String.class,run.id())).isEqualTo("evidence-coverage-v1");
+        } finally {service.close();}
+    }
+    @Test void scoreWriteFailureRollsBackReportAndRequirements() throws Exception {
+        var v=snapshots.createText("评分回滚","项目使用 Redis");var j=snapshots.createJob("评分回滚实习","回滚公司","需要 Redis 基础",null,null,null);var service=service(scoredModel());
+        db.execute("CREATE FUNCTION reject_test_score() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.resume_version_id='"+v.id()+"'::uuid AND NEW.status='SUCCEEDED' THEN RAISE EXCEPTION 'simulated score write failure'; END IF; RETURN NEW; END; $$");
+        db.execute("CREATE TRIGGER reject_score BEFORE UPDATE ON analysis_run FOR EACH ROW EXECUTE FUNCTION reject_test_score()");
+        try {
+            var run=await(service,service.submit(v.id(),j.id(),null).id());
+            assertThat(run.status()).isEqualTo("FAILED");assertThat(run.score()).isNull();assertThat(run.report()).isNull();
+            assertThat(db.queryForObject("SELECT count(*) FROM analysis_requirement WHERE analysis_id=?",Integer.class,run.id())).isZero();
+        } finally {db.execute("DROP TRIGGER reject_score ON analysis_run");db.execute("DROP FUNCTION reject_test_score()");service.close();}
     }
     @Test void telemetryPersistsForSuccessAndFailureAndLegacyRunsHaveNoFakeMetrics() throws Exception {
         var v=snapshots.createText("统计测试","项目使用 Redis");var j=snapshots.createJob("Java","统计虚构公司","需要缓存一致性",null,null,null);

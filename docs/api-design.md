@@ -1,6 +1,6 @@
 # JobCompass 接口说明
 
-最后核对：2026-10-14。以控制器、请求 record 和前端类型为准；字段变化时修改本文件。
+最后核对：2026-10-27。以控制器、请求 record 和前端类型为准；字段变化时修改本文件。
 
 ## 1. 访问约定
 
@@ -37,7 +37,7 @@
 
 `metrics` 可空：历史数据、排队中或在模型调用前失败时没有统计。新模型调用成功及失败均保存已获取的数值。字段为 `snapshotMode, attempts, retryCount, toolCalls, validationFailures, modelFailures, inputTokens, outputTokens, reportedInputTokens, reportedOutputTokens, usageComplete, durationMs`。每项 attempt 包含 `stage`（EXTRACT/ASSESS）、`number`（该阶段第几次）、`durationMs, toolCalls, failureCode, inputTokens, outputTokens`。
 
-尝试数不是 HTTP 调用数；Token 按工具循环累计响应用量，再合计阶段与重试。若任一尝试的用量未返回，`usageComplete=false`，总 `inputTokens/outputTokens=null`，`reported*` 只表示已获取的部分。`metrics.durationMs` 是模型分析范围，外层 `durationMs` 包含服务处理，两者无需完全相等。统计不保存正文/Key，不等于费用明细，也不包含其他模块调用。
+尝试数不是 HTTP 调用数；Token 按工具循环累计响应用量，再合计阶段与重试。若任一尝试的用量未返回，`usageComplete=false`，总 `inputTokens/outputTokens=null`，`reported*` 只表示已获取的部分。`metrics.durationMs` 是模型分析范围，外层 `durationMs` 包含服务处理，两者无需完全相等。统计不保存正文/Key，不等于费用明细，也不包含其他模块调用。新版证据核对每批最多 5 项，stage 使用 `ASSESS_BATCH_1` 等名称；每批尝试 number 从 1 开始，每批最多两次，Token 与重试跨所有批次累计，旧 ASSESS 统计仍可读。
 
 `report.requirements` 包含要求 ID、文本、`REQUIRED/PREFERRED`、技能键和岗位引用；`report.assessments` 包含 `requirementId, status, resumeEvidence, reason, actionType, taskTitle, expectedOutput, effortMinutes`。
 
@@ -62,6 +62,22 @@
 人工类别还支持 `LEARN / CLARIFY / CONFIRMED_MATCH`。技能键可空；非空必须是当前支持的映射键，未知要求默认独立。人工复核不覆盖模型报告。请求的 `expectedVersion` 与返回的 `version` 名称不同。
 
 ## 4. 准备计划与投递
+
+### 2026-10-27：新版证据评分与历史兼容
+
+运行对象增加可空 `score`，仅新 `evidence-v3` 报告在成功保存时生成；历史报告、排队和失败运行保持 null，不做隐式重算。`score` 与原报告在同一事务保存，刷新及人工复核不重新计算。
+
+字段为 `algorithmVersion=evidence-coverage-v1, weightVersion=required3-preferred1-v1, source=MODEL, available, coverageScore, uncertainPercent, gapPercent, totalWeight, groups, excludedGroups, warnings, calculatedAt`。时间使用 UTC。available=false 时数值为 null，不能解释为零分；例如未完整提取或无可计分项。
+
+`groups` 每组包含 `groupKey, kind, category, logic, status, weight, matchedWeight, uncertainWeight, gapWeight, members`。成员包含 `requirementId, criterionKey, text, status, weightShare`；ALL 平分组权重，ANY 的成员 weightShare=null、按整个组判断。SKILL/EXPERIENCE 参与数字，DUTY/QUALIFICATION 在 excludedGroups 单列。权重 REQUIRED=3、PREFERRED=1；覆盖/待确认/缺口比例分别为对应权重除总权重，保留两位小数，显示值可能有尾差。
+
+新版 `report` 增加 `schemaVersion, extractionComplete, warnings, taskAdjustments, referenceAdjustments`；每条要求增加 `groupKey, criterionKey, category, logic, additionalJdEvidence`。原子子项最多 60 条、去重后要求组最多 20 组。原来的单条 jdEvidence 仍在，其他重复出处放入 additionalJdEvidence。旧字段和历史 JSON 可读。已有 reviews 是准备行动，不转换为能力等级或复核分数。
+
+referenceAdjustments 每项为 `requirementId, reported, resolved`，记录模型原引用及采用的原文引用列表。仅当忽略排版空白/换行后存在唯一字面来源，且英文/数字词边界不变时允许机械对齐；最终每条 resolved.quote 必须逐字存在于对应段落。不能替换文字、跳过正文、猜测重复出处或用语义相似度补引用，失败仍重试/拒绝。跨原文连续分段的引用拆为多条，最多五条。
+
+模型任务耗时允许给出 1–960 分钟正数估计，Java 向上规范到 30 分钟倍数，保存到 assessment.effortMinutes；发生调整时在 taskAdjustments 保留 `requirementId, reportedMinutes, allocatedMinutes`。零、负数和超过 960 仍校验失败。调整只影响规划建议，不改变 status、引用或证据覆盖分；页面可见原始估计。准备计划接口的 30 分钟单位约束保持原样。
+
+原 `/analyses` 报告 JSON 增加可空 `keywordEvaluation`：`algorithmVersion=keyword-v2, dictionaryVersion, available, coverageScore, unknownCandidates, corrections, terms, relatedCandidates`。terms 记录规范技术名及 JD/简历 occurrence；每处为 `canonical, original, start, end, source`，source 为 EXACT/ALIAS/CORRECTION，位置对应原始 Java 字符串（UTF-16）。未知候选不参与分母。顶层 overallScore/keywordScore 为去重技术覆盖率，semanticScore/atsScore 为兼容别名；无有效项时顶层零仅用于兼容，以 available=false、coverageScore=null 判断无法评估。历史 keywordEvaluation=null 表示 legacy-keyword-v1，原数值不改写。
 
 | 方法 | 路径 | 说明 |
 |---|---|---|

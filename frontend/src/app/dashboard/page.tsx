@@ -85,7 +85,12 @@ export default function DashboardPage() {
   const latestResume = data.resumes[0] ?? null;
   const latestJob = data.jobs[0] ?? null;
   const bestAnalysis = useMemo(
-    () => data.analyses.reduce<AnalysisResponse | null>((best, analysis) => (!best || analysis.overallScore > best.overallScore ? analysis : best), null),
+    () => {
+      const version = data.analyses[0]?.report.keywordEvaluation?.algorithmVersion ?? "legacy-keyword-v1";
+      return data.analyses.filter(a => a.report.keywordEvaluation?.available !== false &&
+        (a.report.keywordEvaluation?.algorithmVersion ?? "legacy-keyword-v1") === version)
+        .reduce<AnalysisResponse | null>((best, a) => (!best || a.overallScore > best.overallScore ? a : best), null);
+    },
     [data.analyses],
   );
   const llmComponent = data.status?.components.find((component) => component.name === "llm");
@@ -263,7 +268,7 @@ export default function DashboardPage() {
 
         <ModuleCard className="min-h-72 md:col-span-2 xl:col-span-8 xl:row-span-2 xl:min-h-0" href={bestAnalysis ? `/analyses/${bestAnalysis.id}` : "/upload"} compact>
           <div className="grid h-full gap-8 md:grid-cols-[auto_1fr] md:items-center">
-            {bestAnalysis ? <ScoreRing label="最佳匹配" score={bestAnalysis.overallScore} /> : <div className="flex h-32 w-32 items-center justify-center border border-black bg-[#e5e5e0] font-mono text-xs font-bold uppercase">暂无报告</div>}
+            {bestAnalysis ? <ScoreRing label={`同算法最高规则分 · ${bestAnalysis.report.keywordEvaluation?.algorithmVersion ?? "legacy-keyword-v1"}`} score={bestAnalysis.overallScore} /> : <div className="flex h-32 w-32 items-center justify-center border border-black bg-[#e5e5e0] font-mono text-xs font-bold uppercase">暂无可评分报告</div>}
             <div>
               <h2 className="font-serif text-3xl font-semibold uppercase leading-none tracking-tight">{bestAnalysis ? "最佳分析" : "创建第一份分析"}</h2>
               <p className="mt-4 font-mono text-xs uppercase leading-5 text-[#6b7280]">
@@ -356,7 +361,7 @@ export default function DashboardPage() {
               </Button>
             ),
             href: `/analyses/${analysis.id}`,
-            meta: `${analysis.status} · 综合 ${analysis.overallScore}`,
+            meta: `${analysis.status} · ${analysis.report.keywordEvaluation?.algorithmVersion ?? "legacy-keyword-v1"} · ${analysis.report.keywordEvaluation?.available === false ? "无法评估" : `规则综合 ${analysis.overallScore}`}`,
             title: `缺口 ${analysis.report.missingKeywords.length} · 建议 ${analysis.report.suggestions.length}`,
             body: analysis.report.suggestions.join(" "),
           }))}

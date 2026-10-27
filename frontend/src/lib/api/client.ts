@@ -26,6 +26,12 @@ export type JobDescriptionResponse = {
   updatedAt: string;
 };
 
+export type KeywordOccurrence = { canonical: string; original: string; start: number; end: number; source: string };
+export type KeywordEvaluation = {
+  algorithmVersion: string; dictionaryVersion: string; available: boolean; coverageScore: number | null;
+  unknownCandidates: string[]; corrections: KeywordOccurrence[]; relatedCandidates: string[];
+  terms: { keyword: string; jobOccurrences: KeywordOccurrence[]; resumeOccurrences: KeywordOccurrence[] }[];
+};
 export type AnalysisResponse = {
   id: string;
   resumeId: string;
@@ -46,6 +52,7 @@ export type AnalysisResponse = {
       evidence: string;
       matched: boolean;
     }>;
+    keywordEvaluation?: KeywordEvaluation | null;
   };
   createdAt: string;
   updatedAt: string;

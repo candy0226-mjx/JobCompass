@@ -1,0 +1,542 @@
+{
+  "date": "2026-10-27",
+  "scope": "Synthetic functional checks; repeated pilot, not universal accuracy or concurrency benchmark",
+  "model": "deepseek-flash",
+  "datasetSha256": "fd66336ea819806b61bb7ee9e382d21b1b9504d7a9f96bd5b401f2f4b6807cc4",
+  "modelSourceSha256": "665f2332590f860c536243ecb317623cddd5842fd812d58b2c112e02d11a26e7",
+  "ordinaryTests": 51,
+  "postgresTests": 21,
+  "finalCases": [
+    {
+      "case": "dev-duplicate-any",
+      "split": "development",
+      "passed": true,
+      "errors": [],
+      "runId": "8c2debe7-6b8c-4a49-8f76-ba6e252d6663",
+      "score": {
+        "algorithmVersion": "evidence-coverage-v1",
+        "weightVersion": "required3-preferred1-v1",
+        "source": "MODEL",
+        "available": true,
+        "coverageScore": 100.0,
+        "uncertainPercent": 0.0,
+        "gapPercent": 0.0,
+        "totalWeight": 6.0,
+        "groups": [
+          {
+            "groupKey": "skill-j1-0",
+            "kind": "REQUIRED",
+            "category": "SKILL",
+            "logic": "ALL",
+            "status": "MATCH",
+            "weight": 3.0,
+            "matchedWeight": 3.0,
+            "uncertainWeight": 0.0,
+            "gapWeight": 0.0,
+            "members": [
+              {
+                "requirementId": "40fd93b4-a784-4d2d-9b89-8d4dfa439479",
+                "criterionKey": "redis.cache",
+                "text": "熟悉 Redis 缓存",
+                "status": "MATCH",
+                "weightShare": 3.0
+              }
+            ]
+          },
+          {
+            "groupKey": "skill-j3-0",
+            "kind": "REQUIRED",
+            "category": "SKILL",
+            "logic": "ANY",
+            "status": "MATCH",
+            "weight": 3.0,
+            "matchedWeight": 3.0,
+            "uncertainWeight": 0.0,
+            "gapWeight": 0.0,
+            "members": [
+              {
+                "requirementId": "b3d662c8-1a55-4f7c-9e76-2552998bccf5",
+                "criterionKey": "kafka",
+                "text": "了解 Kafka",
+                "status": "UNCERTAIN",
+                "weightShare": null
+              },
+              {
+                "requirementId": "5f77d785-5213-4f7b-a96b-eb4cf571bb3d",
+                "criterionKey": "rabbitmq",
+                "text": "了解 RabbitMQ",
+                "status": "MATCH",
+                "weightShare": null
+              }
+            ]
+          }
+        ],
+        "excludedGroups": [],
+        "warnings": [
+          "仅对已提取且校验通过的技术/经验要求计分；模型的完整性声明不等于独立证明没有遗漏。"
+        ],
+        "calculatedAt": "2026-10-27T10:33:24.8118733Z"
+      },
+      "metrics": {
+        "snapshotMode": "COMPACT",
+        "attempts": [
+          {
+            "stage": "EXTRACT",
+            "number": 1,
+            "durationMs": 3878,
+            "toolCalls": 1,
+            "failureCode": null,
+            "inputTokens": 2018,
+            "outputTokens": 341
+          },
+          {
+            "stage": "ASSESS_BATCH_1",
+            "number": 1,
+            "durationMs": 6145,
+            "toolCalls": 2,
+            "failureCode": null,
+            "inputTokens": 2411,
+            "outputTokens": 813
+          }
+        ],
+        "retryCount": 0,
+        "toolCalls": 3,
+        "validationFailures": 0,
+        "modelFailures": 0,
+        "inputTokens": 4429,
+        "outputTokens": 1154,
+        "reportedInputTokens": 4429,
+        "reportedOutputTokens": 1154,
+        "usageComplete": true,
+        "durationMs": 10025
+      }
+    },
+    {
+      "case": "dev-all-partial",
+      "split": "development",
+      "passed": true,
+      "errors": [],
+      "runId": "beb3bb34-e59b-497f-8d32-0c7b5c457233",
+      "score": {
+        "algorithmVersion": "evidence-coverage-v1",
+        "weightVersion": "required3-preferred1-v1",
+        "source": "MODEL",
+        "available": true,
+        "coverageScore": 50.0,
+        "uncertainPercent": 0.0,
+        "gapPercent": 50.0,
+        "totalWeight": 3.0,
+        "groups": [
+          {
+            "groupKey": "skill-j1-0",
+            "kind": "REQUIRED",
+            "category": "SKILL",
+            "logic": "ALL",
+            "status": "GAP",
+            "weight": 3.0,
+            "matchedWeight": 1.5,
+            "uncertainWeight": 0.0,
+            "gapWeight": 1.5,
+            "members": [
+              {
+                "requirementId": "b98a4344-b7d3-41d9-b0e0-81c06f0554a3",
+                "criterionKey": "kafka.consumption",
+                "text": "熟悉 Kafka 消费机制",
+                "status": "GAP",
+                "weightShare": 1.5
+              },
+              {
+                "requirementId": "399a4b7d-8d4c-44f0-bb9b-c369823174cf",
+                "criterionKey": "redis.cache",
+                "text": "熟悉 Redis 缓存",
+                "status": "MATCH",
+                "weightShare": 1.5
+              }
+            ]
+          }
+        ],
+        "excludedGroups": [],
+        "warnings": [
+          "仅对已提取且校验通过的技术/经验要求计分；模型的完整性声明不等于独立证明没有遗漏。"
+        ],
+        "calculatedAt": "2026-10-27T10:33:26.7696914Z"
+      },
+      "metrics": {
+        "snapshotMode": "COMPACT",
+        "attempts": [
+          {
+            "stage": "EXTRACT",
+            "number": 1,
+            "durationMs": 4905,
+            "toolCalls": 2,
+            "failureCode": null,
+            "inputTokens": 2169,
+            "outputTokens": 179
+          },
+          {
+            "stage": "ASSESS_BATCH_1",
+            "number": 1,
+            "durationMs": 7036,
+            "toolCalls": 2,
+            "failureCode": null,
+            "inputTokens": 2328,
+            "outputTokens": 876
+          }
+        ],
+        "retryCount": 0,
+        "toolCalls": 4,
+        "validationFailures": 0,
+        "modelFailures": 0,
+        "inputTokens": 4497,
+        "outputTokens": 1055,
+        "reportedInputTokens": 4497,
+        "reportedOutputTokens": 1055,
+        "usageComplete": true,
+        "durationMs": 11941
+      }
+    },
+    {
+      "case": "accept-qualification",
+      "split": "acceptance",
+      "passed": true,
+      "errors": [],
+      "runId": "e5b23760-0508-4dda-b6e8-908305b28de1",
+      "score": {
+        "algorithmVersion": "evidence-coverage-v1",
+        "weightVersion": "required3-preferred1-v1",
+        "source": "MODEL",
+        "available": false,
+        "coverageScore": null,
+        "uncertainPercent": null,
+        "gapPercent": null,
+        "totalWeight": 0.0,
+        "groups": [],
+        "excludedGroups": [
+          {
+            "groupKey": "qualification-j1-0",
+            "kind": "REQUIRED",
+            "category": "QUALIFICATION",
+            "logic": "ALL",
+            "status": "GAP",
+            "weight": 0.0,
+            "matchedWeight": 0.0,
+            "uncertainWeight": 0.0,
+            "gapWeight": 0.0,
+            "members": [
+              {
+                "requirementId": "c72808de-4b57-40ff-b5ea-df511ac3af40",
+                "criterionKey": "onsite-at-least-4-days-per-week",
+                "text": "每周至少到岗四天",
+                "status": "GAP",
+                "weightShare": 0.0
+              }
+            ]
+          }
+        ],
+        "warnings": [
+          "没有可计分的技术或经验要求；资格和职责单独展示。"
+        ],
+        "calculatedAt": "2026-10-27T10:33:31.7217203Z"
+      },
+      "metrics": {
+        "snapshotMode": "COMPACT",
+        "attempts": [
+          {
+            "stage": "EXTRACT",
+            "number": 1,
+            "durationMs": 3048,
+            "toolCalls": 1,
+            "failureCode": null,
+            "inputTokens": 1998,
+            "outputTokens": 209
+          },
+          {
+            "stage": "ASSESS_BATCH_1",
+            "number": 1,
+            "durationMs": 3770,
+            "toolCalls": 2,
+            "failureCode": null,
+            "inputTokens": 2239,
+            "outputTokens": 371
+          }
+        ],
+        "retryCount": 0,
+        "toolCalls": 3,
+        "validationFailures": 0,
+        "modelFailures": 0,
+        "inputTokens": 4237,
+        "outputTokens": 580,
+        "reportedInputTokens": 4237,
+        "reportedOutputTokens": 580,
+        "usageComplete": true,
+        "durationMs": 6818
+      }
+    },
+    {
+      "case": "accept-llm-scope",
+      "split": "acceptance",
+      "passed": true,
+      "errors": [],
+      "runId": "6f9c47d0-d696-4cc1-b34b-311602d21409",
+      "score": {
+        "algorithmVersion": "evidence-coverage-v1",
+        "weightVersion": "required3-preferred1-v1",
+        "source": "MODEL",
+        "available": true,
+        "coverageScore": 75.0,
+        "uncertainPercent": 0.0,
+        "gapPercent": 25.0,
+        "totalWeight": 4.0,
+        "groups": [
+          {
+            "groupKey": "experience-j1-0",
+            "kind": "REQUIRED",
+            "category": "EXPERIENCE",
+            "logic": "ALL",
+            "status": "MATCH",
+            "weight": 3.0,
+            "matchedWeight": 3.0,
+            "uncertainWeight": 0.0,
+            "gapWeight": 0.0,
+            "members": [
+              {
+                "requirementId": "da9e3f1e-3d5f-4d83-bec5-ed3a7b2aa608",
+                "criterionKey": "llm.app.development.experience",
+                "text": "具备大模型应用开发经验",
+                "status": "MATCH",
+                "weightShare": 3.0
+              }
+            ]
+          },
+          {
+            "groupKey": "experience-j2-0",
+            "kind": "PREFERRED",
+            "category": "EXPERIENCE",
+            "logic": "ALL",
+            "status": "GAP",
+            "weight": 1.0,
+            "matchedWeight": 0.0,
+            "uncertainWeight": 0.0,
+            "gapWeight": 1.0,
+            "members": [
+              {
+                "requirementId": "1f451f25-8cbc-4f24-b3aa-71e34eae82b1",
+                "criterionKey": "model.training.experience",
+                "text": "具备模型训练经验者优先",
+                "status": "GAP",
+                "weightShare": 1.0
+              }
+            ]
+          }
+        ],
+        "excludedGroups": [],
+        "warnings": [
+          "仅对已提取且校验通过的技术/经验要求计分；模型的完整性声明不等于独立证明没有遗漏。"
+        ],
+        "calculatedAt": "2026-10-27T10:33:36.221921Z"
+      },
+      "metrics": {
+        "snapshotMode": "COMPACT",
+        "attempts": [
+          {
+            "stage": "EXTRACT",
+            "number": 1,
+            "durationMs": 3167,
+            "toolCalls": 1,
+            "failureCode": null,
+            "inputTokens": 2006,
+            "outputTokens": 306
+          },
+          {
+            "stage": "ASSESS_BATCH_1",
+            "number": 1,
+            "durationMs": 6274,
+            "toolCalls": 2,
+            "failureCode": null,
+            "inputTokens": 2357,
+            "outputTokens": 840
+          }
+        ],
+        "retryCount": 0,
+        "toolCalls": 3,
+        "validationFailures": 0,
+        "modelFailures": 0,
+        "inputTokens": 4363,
+        "outputTokens": 1146,
+        "reportedInputTokens": 4363,
+        "reportedOutputTokens": 1146,
+        "usageComplete": true,
+        "durationMs": 9442
+      }
+    },
+    {
+      "case": "accept-missing-unknown",
+      "split": "acceptance",
+      "passed": true,
+      "errors": [],
+      "runId": "cc760957-84fd-4082-8de2-fa817aa49ff3",
+      "score": {
+        "algorithmVersion": "evidence-coverage-v1",
+        "weightVersion": "required3-preferred1-v1",
+        "source": "MODEL",
+        "available": true,
+        "coverageScore": 0.0,
+        "uncertainPercent": 100.0,
+        "gapPercent": 0.0,
+        "totalWeight": 3.0,
+        "groups": [
+          {
+            "groupKey": "skill-j1-0",
+            "kind": "REQUIRED",
+            "category": "SKILL",
+            "logic": "ALL",
+            "status": "UNCERTAIN",
+            "weight": 3.0,
+            "matchedWeight": 0.0,
+            "uncertainWeight": 3.0,
+            "gapWeight": 0.0,
+            "members": [
+              {
+                "requirementId": "2e0ef4c0-24ff-4830-9a28-e4d0d32443c7",
+                "criterionKey": "rust",
+                "text": "掌握 Rust",
+                "status": "UNCERTAIN",
+                "weightShare": 3.0
+              }
+            ]
+          }
+        ],
+        "excludedGroups": [],
+        "warnings": [
+          "仅对已提取且校验通过的技术/经验要求计分；模型的完整性声明不等于独立证明没有遗漏。"
+        ],
+        "calculatedAt": "2026-10-27T10:33:37.1148329Z"
+      },
+      "metrics": {
+        "snapshotMode": "COMPACT",
+        "attempts": [
+          {
+            "stage": "EXTRACT",
+            "number": 1,
+            "durationMs": 1990,
+            "toolCalls": 1,
+            "failureCode": null,
+            "inputTokens": 1979,
+            "outputTokens": 118
+          },
+          {
+            "stage": "ASSESS_BATCH_1",
+            "number": 1,
+            "durationMs": 3394,
+            "toolCalls": 2,
+            "failureCode": null,
+            "inputTokens": 2233,
+            "outputTokens": 285
+          }
+        ],
+        "retryCount": 0,
+        "toolCalls": 3,
+        "validationFailures": 0,
+        "modelFailures": 0,
+        "inputTokens": 4212,
+        "outputTokens": 403,
+        "reportedInputTokens": 4212,
+        "reportedOutputTokens": 403,
+        "usageComplete": true,
+        "durationMs": 5384
+      }
+    },
+    {
+      "case": "accept-any-alternative",
+      "split": "acceptance",
+      "passed": true,
+      "errors": [],
+      "runId": "3a3dc714-0cd2-45af-9634-9ec79d6fcb29",
+      "score": {
+        "algorithmVersion": "evidence-coverage-v1",
+        "weightVersion": "required3-preferred1-v1",
+        "source": "MODEL",
+        "available": true,
+        "coverageScore": 100.0,
+        "uncertainPercent": 0.0,
+        "gapPercent": 0.0,
+        "totalWeight": 3.0,
+        "groups": [
+          {
+            "groupKey": "skill-j1-0",
+            "kind": "REQUIRED",
+            "category": "SKILL",
+            "logic": "ANY",
+            "status": "MATCH",
+            "weight": 3.0,
+            "matchedWeight": 3.0,
+            "uncertainWeight": 0.0,
+            "gapWeight": 0.0,
+            "members": [
+              {
+                "requirementId": "6012d255-88d2-42f9-b5c8-534f0f4ab3ed",
+                "criterionKey": "kafka",
+                "text": "熟悉 Kafka",
+                "status": "GAP",
+                "weightShare": null
+              },
+              {
+                "requirementId": "e68f64f2-0d7f-4b46-9a03-854deede5958",
+                "criterionKey": "rabbitmq",
+                "text": "熟悉 RabbitMQ",
+                "status": "MATCH",
+                "weightShare": null
+              }
+            ]
+          }
+        ],
+        "excludedGroups": [],
+        "warnings": [
+          "仅对已提取且校验通过的技术/经验要求计分；模型的完整性声明不等于独立证明没有遗漏。"
+        ],
+        "calculatedAt": "2026-10-27T10:33:44.2522677Z"
+      },
+      "metrics": {
+        "snapshotMode": "COMPACT",
+        "attempts": [
+          {
+            "stage": "EXTRACT",
+            "number": 1,
+            "durationMs": 2320,
+            "toolCalls": 1,
+            "failureCode": null,
+            "inputTokens": 1989,
+            "outputTokens": 177
+          },
+          {
+            "stage": "ASSESS_BATCH_1",
+            "number": 1,
+            "durationMs": 5700,
+            "toolCalls": 2,
+            "failureCode": null,
+            "inputTokens": 2334,
+            "outputTokens": 675
+          }
+        ],
+        "retryCount": 0,
+        "toolCalls": 3,
+        "validationFailures": 0,
+        "modelFailures": 0,
+        "inputTokens": 4323,
+        "outputTokens": 852,
+        "reportedInputTokens": 4323,
+        "reportedOutputTokens": 852,
+        "usageComplete": true,
+        "durationMs": 8020
+      }
+    }
+  ],
+  "developmentFindings": [
+    "Source grouping initially multiplied one compound requirement weight; fixed with source-clause grouping.",
+    "One run strengthened Redis cache into cache mechanism; retained expected labels, added original JD context and explicit no-strengthening instruction."
+  ],
+  "historicalFilesUnchanged": [
+    "jobcompass-evaluation-comparison.json",
+    "jobcompass-evaluation-results.json"
+  ]
+}

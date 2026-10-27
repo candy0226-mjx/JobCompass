@@ -1,0 +1,42 @@
+{
+  "version": "evidence-coverage-v1-acceptance-1",
+  "scope": "Synthetic multi-requirement functional cases; not a universal accuracy benchmark",
+  "cases": [
+    {
+      "id": "dev-duplicate-any", "split": "development",
+      "resume": "我使用 Redis 缓存热点数据，并用 RabbitMQ TTL 和死信队列关闭超时订单。",
+      "job": "熟悉 Redis 缓存。\n熟悉Redis缓存。\n了解 RabbitMQ 或 Kafka。",
+      "expected": {"available": true, "coverageScore": 100, "totalWeight": 6, "notes": "Duplicate Redis criterion once; MQ is ANY"}
+    },
+    {
+      "id": "dev-all-partial", "split": "development",
+      "resume": "我用 Redis 缓存商品信息，设置过期时间。不会 Kafka 消费机制。",
+      "job": "熟悉 Redis 缓存和 Kafka 消费机制。",
+      "expected": {"available": true, "coverageScore": 50, "totalWeight": 3, "notes": "Two ALL members share one requirement weight"}
+    },
+    {
+      "id": "accept-qualification", "split": "acceptance",
+      "resume": "每周只能到岗两天，不能每周到岗四天。",
+      "job": "每周至少到岗四天。",
+      "expected": {"available": false, "excludedCategory": "QUALIFICATION", "excludedStatus": "GAP"}
+    },
+    {
+      "id": "accept-llm-scope", "split": "acceptance",
+      "resume": "用 Spring AI 实现模型调用、提示词构建和 Tool Calling，完成智能问答接口。\n从未训练模型。",
+      "job": "有大模型应用开发经验。\n具备模型训练经验者优先。",
+      "expected": {"available": true, "coverageScore": 75, "totalWeight": 4, "notes": "Application experience cannot imply model training"}
+    },
+    {
+      "id": "accept-missing-unknown", "split": "acceptance",
+      "resume": "用 JavaScript 编写过网页表单。",
+      "job": "掌握 Rust。",
+      "expected": {"available": true, "coverageScore": 0, "uncertainPercent": 100, "notes": "Missing technology is UNCERTAIN, not GAP"}
+    },
+    {
+      "id": "accept-any-alternative", "split": "acceptance",
+      "resume": "不会 Kafka。我用 RabbitMQ TTL 和死信队列实现订单超时关闭，消费时重新核对支付状态。",
+      "job": "熟悉 RabbitMQ 或 Kafka。",
+      "expected": {"available": true, "coverageScore": 100, "totalWeight": 3, "notes": "One concrete matching alternative suffices"}
+    }
+  ]
+}

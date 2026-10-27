@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { AnalysisPreviewStrip } from "@/components/comparison-panels";
+import { AnalysisPreviewStrip, KeywordEvaluationNotes } from "@/components/comparison-panels";
 import { EvidenceMatrix, KeywordCloud } from "@/components/keyword-panels";
 import { ScoreRing } from "@/components/score-ring";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -115,10 +115,11 @@ export default function AnalysisDetailPage({ params }: { params: Promise<{ analy
                 }
                 eyebrow="评分"
                 title="整体匹配"
-                description={`创建时间：${formatDateTime(analysis.createdAt)}。分数来自关键词覆盖、语义相关性和 ATS 可读性。`}
+                description={`创建时间：${formatDateTime(analysis.createdAt)}。分数来自关键词及规则估算，未进行真实语义或招聘方 ATS 测试。`}
               />
               <div className="mt-5">
-                <ScoreRing label="综合得分" score={analysis.overallScore} />
+                {analysis.report.keywordEvaluation?.available === false ? <p>没有可计分技术项，无法评估。</p> : <ScoreRing label="规则综合" score={analysis.overallScore} />}
+                <KeywordEvaluationNotes analysis={analysis} />
               </div>
             </Card>
             <Card tone="paper">
@@ -168,7 +169,7 @@ export default function AnalysisDetailPage({ params }: { params: Promise<{ analy
 
           <section className="grid gap-6 lg:grid-cols-2">
             <Card tone="paper">
-              <CardHeader eyebrow="已匹配" title="已匹配关键词" description="这些词在简历文本中有证据或高度相关表达。" />
+              <CardHeader eyebrow="已命中" title="字面命中关键词" description="原词或受控别名出现在简历中，实际能力仍需结合项目经历核对。" />
               <div className="mt-5">
                 <KeywordCloud keywords={analysis.report.matchedKeywords} tone="matched" />
               </div>

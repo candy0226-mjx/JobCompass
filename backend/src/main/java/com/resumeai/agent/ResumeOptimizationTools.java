@@ -34,8 +34,8 @@ public class ResumeOptimizationTools {
             @ToolParam(description = "目标岗位 JD") String jobDescription
     ) {
         var match = keywordMatcher.match(resumeText, jobDescription);
-        var total = Math.max(1, match.keywords().size());
-        var score = Math.round(match.matched().size() * 100f / total);
-        return "keywordScore=%d, matched=%s, missing=%s".formatted(score, match.matched(), match.missing());
+        return "algorithm=%s, keywordScore=%s, matched=%s, missing=%s, unknown=%s; 字面命中不代表能力已核实。".formatted(
+                match.details().algorithmVersion(), match.details().coverageScore() == null ? "无法评估" : match.details().coverageScore(),
+                match.matched(), match.missing(), match.details().unknownCandidates());
     }
 }

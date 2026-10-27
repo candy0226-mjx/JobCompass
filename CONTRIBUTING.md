@@ -57,7 +57,7 @@ try {
 }
 ```
 
-当前评估使用 `samples/jobcompass-evaluation.json` 中 40 个虚构单要求样例（25 个开发、15 个独立验收），逐组交替执行 FULL/COMPACT，共 80 次分析任务。每完成一次就保存结果到 `docs/jobcompass-evaluation-comparison.json`，会覆盖该比较文件；历史 15 条结果文件保持不变。仅需试跑时执行 `mvn '-Dtest=CompassLiveModelIT' '-Dcompass.eval.limit=1' '-Dcompass.eval.output=target/evaluation-smoke.json' test`。少量试跑不能作为启用精简模式的依据。
+当前评估使用 `samples/jobcompass-evaluation.json` 中 40 个虚构单要求样例（25 个开发、15 个独立验收），逐组交替执行 FULL/COMPACT，共 80 次分析任务。2026-10-27 升级 evidence-v3 后，默认输出改为 `docs/jobcompass-evidence-v3-evaluation-comparison.json`，避免覆盖此前 evidence-v2 的 `docs/jobcompass-evaluation-comparison.json`；历史 15 条结果文件也保持不变。每完成一次保存新输出，重复运行会覆盖所选输出文件。仅需试跑时执行 `mvn '-Dtest=CompassLiveModelIT' '-Dcompass.eval.limit=1' '-Dcompass.eval.output=target/evaluation-smoke.json' test`。少量试跑不能作为启用精简模式的依据。新分组评分另有 `samples/evidence-scoring-evaluation.json` 的多要求样例，不能仅凭原单要求数据证明新评分有效。
 
 查看 `completed`、全部原始行、开发/验收集各自汇总以及 `compactEligible`。JUnit 通过表示评估执行/统计正常，不表示模型质量通过；失败任务保留在成功率和标签一致率分母中。Token 使用 ChatClient 返回的工具循环累计用量，再合计两个阶段及重试；缺失返回值不当作零，阶段尝试数不是 HTTP 请求数，Token 数不是账单。P50/P95 使用最近秩（nearest-rank）算法。当前每组仅一次对照，不是通用准确率或并发压测。
 

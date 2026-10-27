@@ -3,6 +3,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
+import { EvidenceScorePanel } from "@/components/evidence-score";
 import { compass, ExperienceSession, Run, statusLabel } from "@/lib/api/compass";
 export default function EvidencePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params); const [run, setRun] = useState<Run | null>(null), [error, setError] = useState(""), [busy, setBusy] = useState(false);
@@ -12,18 +13,23 @@ export default function EvidencePage({ params }: { params: Promise<{ id: string 
     <Link href="/compass" className="font-bold text-blue-700 underline">返回求职罗盘</Link>
     {error && <p role="alert" className="bg-red-50 p-4 text-red-800">{error}</p>}
     {run && <p>{run.job.company} · {statusLabel[run.status]} · 工具读取 {run.toolCalls} 次 · {run.durationMs === null ? "等待结果" : `${(run.durationMs / 1000).toFixed(1)} 秒`}</p>}
+    {run?.status === "SUCCEEDED" && <EvidenceScorePanel score={run.score} />}
     {run?.metrics && <Card><h2 className="text-lg font-semibold">本次调用统计</h2>
       <p className="mt-2 text-sm">阶段尝试 {run.metrics.attempts.length} 次 · 重试 {run.metrics.retryCount} 次 · 校验失败 {run.metrics.validationFailures} 次 · 模型/格式失败 {run.metrics.modelFailures} 次</p>
       <p className="mt-2 text-sm">{run.metrics.usageComplete ? `输入 ${run.metrics.inputTokens} / 输出 ${run.metrics.outputTokens} Token` : `Token 未完整返回；已报告输入 ${run.metrics.reportedInputTokens} / 输出 ${run.metrics.reportedOutputTokens}，不代表总消耗`}</p>
       <p className="mt-2 text-xs text-slate-500">包含两个分析阶段及重试，工具循环按供应商累计用量统计。阶段尝试数不是 HTTP 请求数；Token 不是实际账单。快照模式：{run.metrics.snapshotMode}。</p>
-      <details className="mt-3 text-sm"><summary>查看阶段明细</summary>{run.metrics.attempts.map((a,i)=><p key={i} className="mt-2">{a.stage === "EXTRACT" ? "提取要求" : "核对证据"} · 第 {a.number} 次 · {a.durationMs} ms · 工具 {a.toolCalls} 次 · {a.failureCode || "成功"} · 输入 {a.inputTokens ?? "未返回"} / 输出 {a.outputTokens ?? "未返回"}</p>)}</details>
+      <details className="mt-3 text-sm"><summary>查看阶段明细</summary>{run.metrics.attempts.map((a,i)=><p key={i} className="mt-2">{a.stage === "EXTRACT" ? "提取要求" : a.stage.startsWith("ASSESS_BATCH_") ? `核对证据批次 ${a.stage.slice(13)}` : "核对证据"} · 第 {a.number} 次 · {a.durationMs} ms · 工具 {a.toolCalls} 次 · {a.failureCode || "成功"} · 输入 {a.inputTokens ?? "未返回"} / 输出 {a.outputTokens ?? "未返回"}</p>)}</details>
     </Card>}
     {run?.status === "FAILED" && <Card><p>失败类别：{run.errorCode}。本次没有有效报告。</p><button disabled={busy} className="mt-3 border border-black p-3" onClick={async () => { setBusy(true); try { const next = await compass<Run>(`/evidence-analyses/${id}/retry`, "POST"); window.location.href = `/evidence-analyses/${next.id}`; } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }}>创建新运行重试</button></Card>}
     {run?.report?.requirements.map(q => { const a = run.report!.assessments.find(x => x.requirementId === q.id)!; const review = run.reviews.find(x => x.requirementId === q.id); const edit = edits[q.id] || { category: review?.category || (a.status === "MATCH" ? "CONFIRMED_MATCH" : a.actionType === "LEARN" ? "LEARN" : "CLARIFY"), note: review?.note || "", skillKey: review?.skillKey || "" }; return <Card tone="paper" key={q.id}>
       <h2 className="text-xl font-bold">{statusLabel[q.kind]} · {q.text}</h2><p className="my-3 font-bold">{statusLabel[a.status]}：{a.reason}</p>
+      {q.groupKey && <p className="mb-2 text-xs text-slate-500">要求组 {q.groupKey} · {q.logic === "ANY" ? "任选一个分支满足" : "子项分别核对"} · {q.category === "QUALIFICATION" || q.category === "DUTY" ? "资格/职责单列" : "参与证据覆盖计算"}</p>}
       <blockquote className="border-l-4 border-blue-700 p-3 text-sm">JD [{q.jdEvidence.segmentId}] {q.jdEvidence.quote}</blockquote>
+      {q.additionalJdEvidence?.map((ref,i)=><blockquote key={i} className="mt-2 border-l-4 border-blue-300 p-3 text-sm">同项其他出处 [{ref.segmentId}] {ref.quote}</blockquote>)}
+      {run.report?.referenceAdjustments?.filter(t=>t.requirementId===q.id).map((t,i)=><details key={i} className="mt-2 text-xs text-slate-600"><summary>引用格式已按唯一原文对齐（查看记录）</summary><p>模型引用 [{t.reported.segmentId}] {t.reported.quote}</p>{t.resolved.map((ref,j)=><p key={j}>采用原文 [{ref.segmentId}] {ref.quote}</p>)}</details>)}
       {a.resumeEvidence.length ? a.resumeEvidence.map((r, i) => <blockquote key={i} className="mt-2 border-l-4 border-green-700 p-3 text-sm">简历 [{r.segmentId}] {r.quote}</blockquote>) : <p className="mt-2 text-sm">没有足够的简历证据，需要核实。</p>}
       {a.actionType !== "NONE" && <p className="my-3 text-sm">候选任务：{a.taskTitle}；产物：{a.expectedOutput}；建议 {a.effortMinutes} 分钟（需要你确认）。</p>}
+      {run.report?.taskAdjustments?.filter(t=>t.requirementId===q.id).map(t=><p key={t.requirementId} className="text-xs text-slate-600">模型原估计 {t.reportedMinutes} 分钟，规划按 30 分钟单位向上调整为 {t.allocatedMinutes} 分钟；不改变能力判断或分数。</p>)}
       <div className="mt-4 grid gap-3 md:grid-cols-[1fr_2fr_auto]"><select aria-label={`复核类别 ${q.text}`} className="border border-black p-2" value={edit.category} onChange={e => setEdits({ ...edits, [q.id]: { ...edit, category: e.target.value } })}><option value="CONFIRMED_MATCH">核实已有能力，无需准备任务</option><option value="CLARIFY">尚不确定，需要核实</option><option value="EVIDENCE_FIX">实际做过，补充经历表述</option><option value="LEARN">确实需要学习或实践</option></select>
         <input aria-label={`复核备注 ${q.text}`} className="border border-black p-2" placeholder="说明实际情况" maxLength={1000} value={edit.note} onChange={e => setEdits({ ...edits, [q.id]: { ...edit, note: e.target.value } })}/>
         <button disabled={busy} className="border border-black bg-blue-700 p-2 text-white disabled:opacity-40" onClick={async () => { setBusy(true); setError(""); try { setRun(await compass<Run>(`/evidence-analyses/${id}/reviews`, "PUT", { reviews: [{ requirementId: q.id, category: edit.category, note: edit.note, skillKey: edit.skillKey || null, expectedVersion: review?.version || 0 }] })); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }}>保存复核</button></div>

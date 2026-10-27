@@ -22,7 +22,7 @@ export function highlightText(text: string, keywords: string[]): ReactNode[] {
   }
 
   const escaped = normalized.map((keyword) => keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  const pattern = new RegExp(`(${escaped.join("|")})`, "gi");
+  const pattern = new RegExp(`((?<![A-Za-z0-9_+#])(?:${escaped.join("|")})(?![A-Za-z0-9_+#]))`, "gi");
   const parts = text.split(pattern);
   const lookup = new Set(normalized.map(normalizeKeyword));
 

@@ -8,8 +8,13 @@ public record AnalysisReport(
         List<String> missingKeywords,
         List<String> suggestions,
         List<String> retrievedGuidance,
-        List<EvidenceItem> evidenceMap
+        List<EvidenceItem> evidenceMap,
+        KeywordMatcher.Details keywordEvaluation
 ) {
+    public AnalysisReport(List<String> extractedKeywords, List<String> matchedKeywords, List<String> missingKeywords,
+                          List<String> suggestions, List<String> retrievedGuidance, List<EvidenceItem> evidenceMap) {
+        this(extractedKeywords, matchedKeywords, missingKeywords, suggestions, retrievedGuidance, evidenceMap, null);
+    }
     public record EvidenceItem(
             String keyword,
             String evidence,

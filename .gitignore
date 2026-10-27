@@ -16,6 +16,9 @@ backend/src/main/resources/application-private.yml
 frontend/.env.local
 frontend/.env
 
+# Private local resume test inputs and results
+.local/resume-tests/
+
 # IDE / OS
 .idea/
 .vscode/

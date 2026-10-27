@@ -22,9 +22,9 @@ class CompassLiveModelIT {
         var mapper=new ObjectMapper().findAndRegisterModules();byte[] data=Files.readAllBytes(Path.of("../samples/jobcompass-evaluation.json"));
         var cases=mapper.readValue(data,Case[].class);var rows=new ArrayList<Row>();
         int limit=Integer.getInteger("compass.eval.limit",cases.length);assertThat(limit).isBetween(1,cases.length);
-        Path output=Path.of(System.getProperty("compass.eval.output","../docs/jobcompass-evaluation-comparison.json"));
+        Path output=Path.of(System.getProperty("compass.eval.output","../docs/jobcompass-evidence-v3-evaluation-comparison.json"));
         var root=new LinkedHashMap<String,Object>();root.put("date",LocalDate.now(ZoneId.of("Asia/Shanghai")).toString());
-        root.put("datasetSha256",sha(data));root.put("promptVersion","evidence-v2");root.put("pilotRepetitions",1);
+        root.put("datasetSha256",sha(data));root.put("promptVersion","evidence-v3");root.put("pilotRepetitions",1);
         root.put("scope","Fictional single-requirement cases, paired alternating order; not general accuracy or load-test data.");
         root.put("usageBasis","Cumulative ChatClient response usage across tool rounds, summed across stages/retries. Missing usage is not zero; stage attempts are not HTTP calls.");
         root.put("changedVariable","Tool snapshot payload FULL vs COMPACT; every original segment is retained, prompts/validation unchanged.");
